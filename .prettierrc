@@ -1,4 +1,6 @@
 {
     "printWidth": 100,
-    "singleQuote": true
+    "singleQuote": true,
+    "importOrder": ["^@chakra-ui/(.*)$", "^[./]"],
+    "importOrderSeparation": true
 }
