@@ -1,9 +1,12 @@
 import PropTypes from 'prop-types';
+import { useEffect } from 'react';
 
 import { Box } from '@chakra-ui/react';
 
 export default function Layout({ title, children }) {
-  document.title = `${title} | Hack the Back Admin`;
+  useEffect(() => {
+    document.title = `${title} | Hack the Back Admin`;
+  }, []);
 
   return (
     <Box bg="gray.50" h="100vh" w="100vw" p={5}>
