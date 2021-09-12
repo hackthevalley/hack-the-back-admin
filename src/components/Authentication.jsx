@@ -1,6 +1,8 @@
 import PropTypes from 'prop-types';
 import { useContext, useEffect, useCallback, useState, createContext } from 'react';
 
+import { DEV_IGNORE_AUTH } from '../dev.config';
+
 const UserContext = createContext({});
 
 export function useUser() {
@@ -28,6 +30,10 @@ export function Protected({ children, fallback }) {
 
   if (!isLoaded) {
     return 'Loading...';
+  }
+
+  if (DEV_IGNORE_AUTH) {
+    return children;
   }
 
   return user ? children : fallback;
