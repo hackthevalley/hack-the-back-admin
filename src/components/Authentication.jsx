@@ -1,19 +1,19 @@
 import PropTypes from 'prop-types';
 import { useContext, useEffect, useCallback, useState, createContext } from 'react';
+import { useMutate, useGet } from 'restful-react';
 
 import { DEV_IGNORE_AUTH } from '../dev.config';
 
 const UserContext = createContext({});
 
 export function useUser() {
-  const { fetchUser, isLoaded, user } = useContext(UserContext);
-
-  useEffect(() => {
-    if (isLoaded) return;
-    fetchUser();
-  }, [fetchUser, isLoaded]);
-
-  return { user, isLoaded };
+  const { logout, loading, isAuthenticated, user } = useContext(UserContext);
+  return {
+    isAuthenticated,
+    loading,
+    logout,
+    user,
+  };
 }
 
 export function withProtected(Component, fallback) {
@@ -26,9 +26,9 @@ export function withProtected(Component, fallback) {
 }
 
 export function Protected({ children, fallback }) {
-  const { user, isLoaded } = useUser();
+  const { loading, isAuthenticated } = useUser();
 
-  if (!isLoaded) {
+  if (loading) {
     return 'Loading...';
   }
 
@@ -36,7 +36,7 @@ export function Protected({ children, fallback }) {
     return children;
   }
 
-  return user ? children : fallback;
+  return isAuthenticated ? children : fallback;
 }
 
 Protected.propTypes = {
@@ -45,20 +45,65 @@ Protected.propTypes = {
 };
 
 export function AuthProvider({ children }) {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [user, setUser] = useState(null);
+  const { mutate: refresh } = useMutate({
+    path: '/api/account/auth/token/refresh',
+    verb: 'POST',
+  });
 
-  const fetchUser = useCallback(async () => {
-    if (isLoaded) return user;
+  const { refetch, loading } = useGet('/api/account/users/me', { lazy: true });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(false);
 
-    // TODO: Fetch user auth
-    setIsLoaded(true);
+  const logout = useCallback(async () => {
+    localStorage.removeItem('auth-token');
+    setIsAuthenticated(false);
     setUser(null);
-    return null;
-  }, [isLoaded, user]);
+  }, []);
+
+  const login = useCallback(
+    async (token) => {
+      try {
+        localStorage.setItem('auth-token', token);
+        const res = await refetch();
+        if (!res.isStaffUser) throw new Error('User is not allowed here');
+        setIsAuthenticated(true);
+        setUser(res);
+      } catch (err) {
+        localStorage.removeItem('auth-token', token);
+        throw err;
+      }
+    },
+    [refetch]
+  );
+
+  useEffect(() => {
+    const handler = async () => {
+      const token = localStorage.getItem('auth-token');
+      if (!token) return;
+
+      try {
+        const jwt = await refresh({ token });
+        localStorage.setItem('auth-token', jwt.token);
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error(err);
+        logout();
+      }
+    };
+    let timer;
+    handler().then(() => {
+      timer = window.setInterval(handler, 10000);
+    });
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [logout]);
 
   return (
-    <UserContext.Provider value={{ fetchUser, isLoaded, user }}>{children}</UserContext.Provider>
+    <UserContext.Provider value={{ login, logout, loading, isAuthenticated, user }}>
+      {children}
+    </UserContext.Provider>
   );
 }
 

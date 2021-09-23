@@ -12,6 +12,11 @@ export const dashboardLinks = [
     exact: true,
   },
   {
+    to: '/apps',
+    label: 'Hacker Apps',
+    icon: CgList,
+  },
+  {
     to: '/users',
     label: 'Users',
     icon: CgUserList,
@@ -20,11 +25,6 @@ export const dashboardLinks = [
     to: '/comms',
     label: 'Communication Center',
     icon: CgBell,
-  },
-  {
-    to: '/apps',
-    label: 'Hacker Apps',
-    icon: CgList,
   },
 ];
 

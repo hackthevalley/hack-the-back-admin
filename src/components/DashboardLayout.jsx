@@ -20,7 +20,7 @@ export default function DashboardLayout({ routes, withAuth, children }) {
 
   return (
     <HStack w="100%" minH="100%" align="stretch">
-      <VStack bg={navBg} align="stretch" p="4" width="16rem">
+      <VStack bg={navBg} align="stretch" p="4" width="16rem" flexShrink="0">
         <Text px="4" py="2" fontWeight="bold" textAlign="start">
           Hack The Back
         </Text>
@@ -52,7 +52,7 @@ export default function DashboardLayout({ routes, withAuth, children }) {
           Logout
         </Button>
       </VStack>
-      <Box p="6" pt="10" flexGrow="1">
+      <Box p="6" pt="10" flexGrow="1" minW="1px">
         {/* eslint-disable-next-line react/jsx-props-no-spreading */}
         <Component {...componentProps}>
           <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>

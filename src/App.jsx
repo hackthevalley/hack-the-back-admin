@@ -1,3 +1,4 @@
+import { Toaster } from 'react-hot-toast';
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 
 import { ChakraProvider, ColorModeScript, extendTheme } from '@chakra-ui/react';
@@ -33,6 +34,7 @@ function App() {
           </Switch>
         </Router>
       </AuthProvider>
+      <Toaster />
     </ChakraProvider>
   );
 }
