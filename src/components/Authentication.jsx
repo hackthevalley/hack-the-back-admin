@@ -71,7 +71,7 @@ export function AuthProvider({ children }) {
         setUser(res);
         return res;
       } catch (err) {
-        localStorage.removeItem('auth-token', token);
+        localStorage.removeItem('auth-token');
         throw err;
       }
     },
@@ -85,8 +85,8 @@ export function AuthProvider({ children }) {
 
       try {
         const jwt = await refresh({ token });
-        localStorage.setItem('auth-token', jwt.token);
         if (!jwt.payload.isStaffUser) throw new Error('You do not have access');
+        localStorage.setItem('auth-token', jwt.token);
       } catch (err) {
         // eslint-disable-next-line no-console
         console.error(err);
