@@ -1,16 +1,17 @@
 import PropTypes from 'prop-types';
 import { useContext, useEffect, useCallback, useState, createContext } from 'react';
-import { useMutate, useGet } from 'restful-react';
+import { useMutate } from 'restful-react';
 
 import { DEV_IGNORE_AUTH } from '../dev.config';
 
 const UserContext = createContext({});
 
 export function useUser() {
-  const { logout, loading, isAuthenticated, user } = useContext(UserContext);
+  const { login, logout, loading, isAuthenticated, user } = useContext(UserContext);
   return {
     isAuthenticated,
     loading,
+    login,
     logout,
     user,
   };
@@ -50,7 +51,7 @@ export function AuthProvider({ children }) {
     verb: 'POST',
   });
 
-  const { refetch, loading } = useGet('/api/account/users/me', { lazy: true });
+  const { mutate: getMe, loading } = useMutate({ path: '/api/account/users/me', verb: 'GET' });
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(false);
 
@@ -64,16 +65,17 @@ export function AuthProvider({ children }) {
     async (token) => {
       try {
         localStorage.setItem('auth-token', token);
-        const res = await refetch();
-        if (!res.isStaffUser) throw new Error('User is not allowed here');
+        const res = await getMe();
+        if (!res.isStaff) throw new Error('You do not have access');
         setIsAuthenticated(true);
         setUser(res);
+        return res;
       } catch (err) {
-        localStorage.removeItem('auth-token', token);
+        localStorage.removeItem('auth-token');
         throw err;
       }
     },
-    [refetch]
+    [getMe]
   );
 
   useEffect(() => {
@@ -83,6 +85,7 @@ export function AuthProvider({ children }) {
 
       try {
         const jwt = await refresh({ token });
+        if (!jwt.payload.isStaffUser) throw new Error('You do not have access');
         localStorage.setItem('auth-token', jwt.token);
       } catch (err) {
         // eslint-disable-next-line no-console

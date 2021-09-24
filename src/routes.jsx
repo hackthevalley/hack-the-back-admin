@@ -2,7 +2,7 @@ import { lazy } from 'react';
 import { CgBell, CgHome, CgList, CgUserList } from 'react-icons/cg';
 
 import DashboardLayout from './components/DashboardLayout';
-import Login from './pages/login';
+import Login from './pages/Login';
 
 export const dashboardLinks = [
   {
