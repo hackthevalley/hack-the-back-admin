@@ -47,7 +47,6 @@ export default function ApplicationQuestion({ question, field, meta }) {
             placeholder={question.placeholder}
             type="file"
             // eslint-disable-next-line react/jsx-props-no-spreading
-            {...field}
           />
           {question.description && <FormHelperText>{question.description}</FormHelperText>}
           {meta.error && <FormErrorMessage>{meta.error}</FormErrorMessage>}
