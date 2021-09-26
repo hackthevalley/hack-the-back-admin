@@ -55,6 +55,8 @@ export default function ApplicationDetails() {
     }
   }, [appError, formError, history, location]);
 
+  const isLoading = appLoading || formLoading;
+
   const appToForm =
     app?.answers?.reduce((acc, answer) => {
       acc[answer.question] = answer;
@@ -67,17 +69,15 @@ export default function ApplicationDetails() {
       return acc;
     }, {}) ?? [];
 
-  const initialValues =
-    form?.questions?.reduce((acc, question) => {
-      const { answer, answerOptions } = appToForm[question.id] ?? {};
-      acc[question.id] = answer ?? (answerOptions ?? [])[0] ?? question.defaultAnswer ?? '';
-      return acc;
-    }, {}) ?? [];
+  const initialValues = form?.questions?.reduce((acc, question) => {
+    const { answer, answerOptions } = appToForm[question.id] ?? {};
+    acc[question.id] = answer ?? (answerOptions ?? [])[0] ?? question.defaultAnswer ?? '';
+    return acc;
+  }, {});
 
   if (appError || formError) return null;
 
   const tagConfig = APPLICATION_STATUSES[app?.applicant?.status];
-  const isLoading = appLoading || formLoading;
 
   return (
     <DashboardContent
@@ -162,6 +162,7 @@ export default function ApplicationDetails() {
           }
         }}
         initialValues={initialValues}
+        enableReinitialize
       >
         {({ isSubmitting, isValid, dirty }) => (
           <Form noValidate>

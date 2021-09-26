@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useCallback, useMemo } from 'react';
 import { CgChevronDown, CgSearch, CgFilters } from 'react-icons/cg';
 import { Link } from 'react-router-dom';
 
@@ -71,9 +71,6 @@ export default function Applications() {
     }).format(new Date(date));
 
   const filterDisclosure = useDisclosure();
-  const [page, setPage] = useState(
-    parseInt(new URLSearchParams(window.location.search).get('page') || 1, 10)
-  );
   const {
     staged: filters,
     master: queryParams,
@@ -82,13 +79,19 @@ export default function Applications() {
     restore,
   } = useTransactionalState(initState);
 
-  useEffect(() => {
-    const query = new URLSearchParams({
-      ...queryParams,
-      page,
-    });
+  const setCurrentParams = useCallback((params) => {
+    const query = new URLSearchParams(params);
     window.history.replaceState(null, null, `?${query}`);
-  }, [queryParams, page]);
+  }, []);
+
+  useEffect(() => {
+    setCurrentParams({
+      ...queryParams,
+      page: parseInt(new URLSearchParams(window.location.search).get('page') || 1, 10),
+    });
+  }, [queryParams, setCurrentParams]);
+
+  const options = useMemo(() => ({ queryParams }), [queryParams]);
 
   return (
     <DashboardContent title="Hacker Applications">
@@ -131,11 +134,13 @@ export default function Applications() {
         </div>
       </HStack>
       <PaginatedList
+        initPage={parseInt(new URLSearchParams(window.location.search).get('page') || 1, 10)}
         path="/api/admin/forms/hacker_application/responses"
-        options={{ queryParams }}
-        onPageChange={setPage}
+        options={options}
         labels={labels}
-        initPage={page}
+        onPageChange={(page) => {
+          setCurrentParams({ ...queryParams, page });
+        }}
       >
         {(results) =>
           results.map((result) => {
