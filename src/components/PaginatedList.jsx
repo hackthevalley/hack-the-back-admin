@@ -112,6 +112,9 @@ export default function PaginatedList({
             Next
           </Button>
         </HStack>
+        <Text fontSize="0.75rem" align="center">
+          (Total of {count} {count <= 1 ? 'entry' : 'entries'})
+        </Text>
       </TableCaption>
     </Table>
   );

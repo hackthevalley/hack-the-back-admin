@@ -93,7 +93,14 @@ export default function Applications() {
   return (
     <DashboardContent title="Hacker Applications">
       <HStack mb="4" spacing="3">
-        <InputGroup>
+        <InputGroup
+          as="form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            commit();
+            return false;
+          }}
+        >
           <Input
             onChange={(e) => push({ user__search: e.target.value })}
             value={filters.user__search}
@@ -163,11 +170,9 @@ export default function Applications() {
                       <MenuItem as={Link} to={`/apps/${result.id}`}>
                         View Application
                       </MenuItem>
-                      <MenuItem>Change Status</MenuItem>
                       <MenuItem as={Link} to={`/users/${result.user.id}`}>
                         View User
                       </MenuItem>
-                      <MenuItem color="red.300">Delete</MenuItem>
                     </MenuList>
                   </Menu>
                 </Td>
