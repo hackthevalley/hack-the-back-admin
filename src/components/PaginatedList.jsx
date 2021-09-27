@@ -34,6 +34,7 @@ export default function PaginatedList({
   children,
   path,
 }) {
+  const isInit = useRef(true);
   const [page, setPage] = useState(initPage);
   const [editPage, setEditPage] = useState(initPage);
   const [currentPage, setCurrentPage] = useState();
@@ -43,16 +44,18 @@ export default function PaginatedList({
   });
 
   useEffect(() => {
+    const pageValue = isInit.current ? initPage : 1;
+    isInit.current = false;
     mutate(undefined, {
       ...options,
       queryParams: {
         ...(options.queryParams ?? {}),
         per_page: pageSize,
-        page: 1,
+        page: pageValue,
       },
     }).then(setCurrentPage);
-    setEditPage(1);
-    setPage(1);
+    setEditPage(pageValue);
+    setPage(pageValue);
   }, [options, mutate]);
 
   const memoPage = useRef();
@@ -143,7 +146,9 @@ export default function PaginatedList({
                 onSubmit={async (value) => {
                   const newPage = parseInt(value, 10);
                   if (page === newPage || newPage < 1 || newPage > pages) {
-                    toast.error(`Page must be between 1 - ${pages}`);
+                    if (page !== newPage) {
+                      toast.error(`Page must be between 1 - ${pages}`);
+                    }
                     setEditPage(page);
                     return;
                   }

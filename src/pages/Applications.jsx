@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { CgChevronDown, CgSearch, CgFilters } from 'react-icons/cg';
 import { Link } from 'react-router-dom';
 
@@ -83,13 +83,6 @@ export default function Applications() {
     const query = new URLSearchParams(params);
     window.history.replaceState(null, null, `?${query}`);
   }, []);
-
-  useEffect(() => {
-    setCurrentParams({
-      ...queryParams,
-      page: parseInt(new URLSearchParams(window.location.search).get('page') || 1, 10),
-    });
-  }, [queryParams, setCurrentParams]);
 
   const options = useMemo(() => ({ queryParams }), [queryParams]);
 
