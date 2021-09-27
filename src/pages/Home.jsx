@@ -1,18 +1,19 @@
-import { useGet } from 'restful-react';
+// import { useGet } from 'restful-react';
+import { Link } from 'react-router-dom';
 
 import { Box, Flex, Heading, HStack, Spacer, Stat, StatNumber } from '@chakra-ui/react';
 
 import DashboardContent from '../components/DashboardContent';
 
 export default function DashboardHome() {
-  const { data: user } = useGet({
-    path: '/api/account/users/me',
-  });
+  // const { data: user } = useGet({
+  //   path: '/api/account/users/me',
+  // });
 
   return (
-    <DashboardContent title={`Hello there, ${user.firstName}!`}>
+    <DashboardContent title="Hello there, !">
       <HStack spacing={8}>
-        <Box p={5} shadow="md" borderWidth="1px" flex="1" borderRadius="md">
+        <Box as={Link} to="/users" p={5} shadow="md" borderWidth="1px" flex="1" borderRadius="md">
           <Flex>
             <Box>
               <Heading fontSize="xl">Users</Heading>
@@ -25,8 +26,12 @@ export default function DashboardHome() {
             </Box>
           </Flex>
         </Box>
-        <Box p={5} shadow="md" borderWidth="1px" flex="1" borderRadius="md">
-          <Heading fontSize="xl">Applications</Heading>
+        <Box as={Link} to="/apps" p={5} shadow="md" borderWidth="1px" flex="1" borderRadius="md">
+          <Flex>
+            <Box>
+              <Heading fontSize="xl">Applications</Heading>
+            </Box>
+          </Flex>
         </Box>
       </HStack>
     </DashboardContent>
