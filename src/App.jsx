@@ -15,6 +15,8 @@ const theme = extendTheme({
     global: {
       'html, body, #root': {
         height: '100%',
+        maxHeight: '100vh',
+        overflow: 'hidden',
       },
     },
   },

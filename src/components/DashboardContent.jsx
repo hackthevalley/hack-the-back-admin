@@ -22,6 +22,6 @@ export default function DashboardContent({ children, title, isLoading }) {
 
 DashboardContent.propTypes = {
   children: PropTypes.node.isRequired,
-  title: PropTypes.string.isRequired,
+  title: PropTypes.node.isRequired,
   isLoading: PropTypes.bool,
 };

@@ -1,3 +1,4 @@
+import jwt from 'jsonwebtoken';
 import PropTypes from 'prop-types';
 import { useContext, useEffect, useCallback, useState, createContext } from 'react';
 import { useMutate } from 'restful-react';
@@ -55,7 +56,7 @@ export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(false);
 
-  const logout = useCallback(async () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('auth-token');
     setIsAuthenticated(false);
     setUser(null);
@@ -65,8 +66,9 @@ export function AuthProvider({ children }) {
     async (token) => {
       try {
         localStorage.setItem('auth-token', token);
+        const payload = jwt.decode(token);
+        if (!payload.isStaffUser) throw new Error('You do not have access');
         const res = await getMe();
-        if (!res.isStaff) throw new Error('You do not have access');
         setIsAuthenticated(true);
         setUser(res);
         return res;
@@ -84,9 +86,9 @@ export function AuthProvider({ children }) {
       if (!token) return;
 
       try {
-        const jwt = await refresh({ token });
-        if (!jwt.payload.isStaffUser) throw new Error('You do not have access');
-        localStorage.setItem('auth-token', jwt.token);
+        const newJwt = await refresh({ token });
+        if (!newJwt.payload.isStaffUser) throw new Error('You do not have access');
+        localStorage.setItem('auth-token', newJwt.token);
       } catch (err) {
         // eslint-disable-next-line no-console
         console.error(err);
