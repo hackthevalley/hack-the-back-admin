@@ -33,7 +33,6 @@ export default function ApplicationStats() {
                 <StatNumber fontSize="md">{appCount} total</StatNumber>
               </Stat>
               <Stat>
-                {/* Shows 12 latest applied applicants */}
                 {accepted.count !== 1 ? (
                   <StatNumber fontSize="md">{accepted.count} accepted invites</StatNumber>
                 ) : (
