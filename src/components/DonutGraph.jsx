@@ -69,6 +69,7 @@ export default function DonutGraph({ responseData, responseLabels }) {
     },
     title: {
       text: 'Hacker Application Responses',
+      offsetX: 100,
       offsetY: -5,
       style: {
         fontSize: '20px',
