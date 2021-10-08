@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { CgChevronDown, CgSearch, CgFilters } from 'react-icons/cg';
 import { Link } from 'react-router-dom';
 
@@ -71,9 +71,6 @@ export default function Applications() {
     }).format(new Date(date));
 
   const filterDisclosure = useDisclosure();
-  const [page, setPage] = useState(
-    parseInt(new URLSearchParams(window.location.search).get('page') || 1, 10)
-  );
   const {
     staged: filters,
     master: queryParams,
@@ -82,18 +79,24 @@ export default function Applications() {
     restore,
   } = useTransactionalState(initState);
 
-  useEffect(() => {
-    const query = new URLSearchParams({
-      ...queryParams,
-      page,
-    });
+  const setCurrentParams = useCallback((params) => {
+    const query = new URLSearchParams(params);
     window.history.replaceState(null, null, `?${query}`);
-  }, [queryParams, page]);
+  }, []);
+
+  const options = useMemo(() => ({ queryParams }), [queryParams]);
 
   return (
     <DashboardContent title="Hacker Applications">
       <HStack mb="4" spacing="3">
-        <InputGroup>
+        <InputGroup
+          as="form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            commit();
+            return false;
+          }}
+        >
           <Input
             onChange={(e) => push({ user__search: e.target.value })}
             value={filters.user__search}
@@ -124,11 +127,13 @@ export default function Applications() {
         </div>
       </HStack>
       <PaginatedList
+        initPage={parseInt(new URLSearchParams(window.location.search).get('page') || 1, 10)}
         path="/api/admin/forms/hacker_application/responses"
-        options={{ queryParams }}
-        onPageChange={setPage}
+        options={options}
         labels={labels}
-        initPage={page}
+        onPageChange={(page) => {
+          setCurrentParams({ ...queryParams, page });
+        }}
       >
         {(results) =>
           results.map((result) => {
@@ -163,11 +168,9 @@ export default function Applications() {
                       <MenuItem as={Link} to={`/apps/${result.id}`}>
                         View Application
                       </MenuItem>
-                      <MenuItem>Change Status</MenuItem>
                       <MenuItem as={Link} to={`/users/${result.user.id}`}>
                         View User
                       </MenuItem>
-                      <MenuItem color="red.300">Delete</MenuItem>
                     </MenuList>
                   </Menu>
                 </Td>
