@@ -23,7 +23,7 @@ For development and testing purposes, follow these instructions to get a copy of
 
 The following envionment variables are available to be set:
 
-- **`HTB_BASE_URI`** (Required) - Base URI of a running instance of Hack the Back. If you are running Hack the Back locally with the default settings, set `HTB_BASE_URI` to `http://localhost:8000`.
+- **`REACT_APP_HTB_API`** (Required) - Base URI of a running instance of Hack the Back. If you are running Hack the Back locally with the default settings, set `REACT_APP_HTB_API` to `http://localhost:8000`.
 
 ### Development
 
