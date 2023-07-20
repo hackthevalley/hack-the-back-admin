@@ -10,6 +10,7 @@ import {
 } from '@chakra-ui/react';
 
 import { QUESTION_TYPES } from '../../utils/constants';
+import ViewResume from './ViewResume';
 
 export default function ApplicationQuestion({ question, field, meta }) {
   switch (question.type) {
@@ -43,14 +44,9 @@ export default function ApplicationQuestion({ question, field, meta }) {
           isDisabled
         >
           <FormLabel>{question.label}</FormLabel>
-          <Input
-            placeholder={question.placeholder}
-            type="file"
-            // eslint-disable-next-line react/jsx-props-no-spreading
-          />
+          <ViewResume pdfid={field.value} />
           {question.description && <FormHelperText>{question.description}</FormHelperText>}
           {meta.error && <FormErrorMessage>{meta.error}</FormErrorMessage>}
-          <FormHelperText>Currently not functional :c (Soon TM)</FormHelperText>
         </FormControl>
       );
     case QUESTION_TYPES.HTTP_URL:
@@ -127,6 +123,7 @@ ApplicationQuestion.propTypes = {
     ),
   }).isRequired,
   field: PropTypes.shape({
+    value: PropTypes.string,
     onChange: PropTypes.func.isRequired,
     onBlur: PropTypes.func.isRequired,
     name: PropTypes.string.isRequired,
