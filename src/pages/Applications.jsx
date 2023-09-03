@@ -128,7 +128,7 @@ export default function Applications() {
             </MenuButton>
             <MenuList>
               <UpdateApplicationStatus
-                onUpdate={window.location.reload}
+                onUpdate={() => window.location.reload()}
                 status="Applying"
                 ids={ids}
                 isDisabled={ids.length === 0}
