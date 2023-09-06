@@ -2,7 +2,13 @@
     "extends": ["airbnb", "prettier"],
     "plugins": ["prettier"],
     "rules": {
-        "prettier/prettier": ["error"],
+        "prettier/prettier":
+        [ 
+            "error",
+            {
+                "endOfLine": "auto"
+            }
+        ],
         "react/jsx-uses-react": "off",
         "react/react-in-jsx-scope": "off",
         "react/require-default-props": "off"
