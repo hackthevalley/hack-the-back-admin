@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { CgChevronDown, CgSearch, CgFilters } from 'react-icons/cg';
 import { Link } from 'react-router-dom';
 
@@ -23,6 +23,7 @@ import {
   FormLabel,
   Select,
   Input,
+  Checkbox,
 } from '@chakra-ui/react';
 
 import DashboardContent from '../components/DashboardContent';
@@ -30,6 +31,7 @@ import PaginatedList from '../components/PaginatedList';
 import SimplifiedModal from '../components/SimplifiedModal';
 import { APPLICATION_STATUSES } from '../utils/constants';
 import useTransactionalState from '../utils/useTransactionalState';
+import UpdateApplicationStatus from './ApplicationDetails/ApplicationStatus';
 
 const labels = [
   {
@@ -43,6 +45,9 @@ const labels = [
   },
   {
     label: 'Actions',
+  },
+  {
+    label: 'Batch',
   },
 ];
 
@@ -78,6 +83,8 @@ export default function Applications() {
     commit,
     restore,
   } = useTransactionalState(initState);
+
+  const [ids, setIDs] = useState([]);
 
   const setCurrentParams = useCallback((params) => {
     const query = new URLSearchParams(params);
@@ -120,8 +127,13 @@ export default function Applications() {
               Batch Actions
             </MenuButton>
             <MenuList>
-              <MenuItem>Change Status</MenuItem>
-              <MenuItem>Send Email</MenuItem>
+              <UpdateApplicationStatus
+                onUpdate={() => window.location.reload()}
+                status="Applying"
+                ids={ids}
+                isDisabled={ids.length === 0}
+              />
+              <MenuItem isDisabled>Send Email</MenuItem>
             </MenuList>
           </Menu>
         </div>
@@ -173,6 +185,15 @@ export default function Applications() {
                       </MenuItem>
                     </MenuList>
                   </Menu>
+                </Td>
+                <Td>
+                  <Checkbox
+                    onChange={(e) => {
+                      const newIds = ids.filter((id) => id !== result.id);
+                      if (e.target.checked === true) newIds.push(result.id);
+                      setIDs(newIds);
+                    }}
+                  />
                 </Td>
               </Tr>
             );

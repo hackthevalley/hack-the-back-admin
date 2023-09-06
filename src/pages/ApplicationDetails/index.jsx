@@ -104,7 +104,7 @@ export default function ApplicationDetails() {
                     updateApp({ ...app, applicant: { status } });
                   }}
                   status={app?.applicant.status}
-                  id={id}
+                  ids={[id]}
                 />
                 <MenuItem>Send Email</MenuItem>
                 <MenuItem color="red.400">Delete App</MenuItem>
