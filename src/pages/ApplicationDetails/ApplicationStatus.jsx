@@ -5,7 +5,7 @@ import { MenuItem, useDisclosure } from '@chakra-ui/react';
 
 import UpdateApplicationStatusModal from '../../components/modals/UpdateApplicationStatus';
 
-export default function UpdateApplicationStatus({ status, onUpdate, id }) {
+export default function UpdateApplicationStatus({ status, onUpdate, ids, isDisabled }) {
   const { mutate } = useMutate({
     path: `/api/admin/forms/hacker_application/responses/batch_status_update`,
     verb: 'POST',
@@ -13,14 +13,16 @@ export default function UpdateApplicationStatus({ status, onUpdate, id }) {
   const disclosure = useDisclosure();
   return (
     <>
-      <MenuItem onClick={disclosure.onOpen}>Change Status</MenuItem>
+      <MenuItem onClick={disclosure.onOpen} isDisabled={isDisabled}>
+        Change Status
+      </MenuItem>
       <UpdateApplicationStatusModal
         disclosure={disclosure}
         initStatus={status}
         onUpdate={async (newStatus) => {
           await mutate({
             status: newStatus,
-            responses: [id],
+            responses: ids,
           });
           onUpdate(newStatus);
         }}
@@ -31,6 +33,7 @@ export default function UpdateApplicationStatus({ status, onUpdate, id }) {
 
 UpdateApplicationStatus.propTypes = {
   onUpdate: PropTypes.func.isRequired,
-  id: PropTypes.string.isRequired,
+  ids: PropTypes.arrayOf(PropTypes.string).isRequired,
   status: PropTypes.string,
+  isDisabled: PropTypes.bool,
 };
