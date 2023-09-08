@@ -177,6 +177,11 @@ export default function Applications() {
                       Actions
                     </MenuButton>
                     <MenuList>
+                      <UpdateApplicationStatus
+                        onUpdate={() => window.location.reload()}
+                        status="Applying"
+                        ids={[result.id]}
+                      />
                       <MenuItem as={Link} to={`/apps/${result.id}`}>
                         View Application
                       </MenuItem>
