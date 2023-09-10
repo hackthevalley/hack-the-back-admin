@@ -24,6 +24,10 @@ module.exports = {
       label: 'Confirmed Accept',
       color: 'green',
     },
+    SCANNED_IN: {
+      label: 'Scanned In',
+      color: 'green',
+    },
     REJECTED_INVITE: {
       label: 'Confirmed Reject',
       color: 'red',
