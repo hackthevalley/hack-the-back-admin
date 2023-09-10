@@ -62,7 +62,6 @@ export default function ApplicationDetails() {
       acc[answer.question] = answer;
       return acc;
     }, {}) ?? {};
-
   const questionsById =
     form?.questions?.reduce((acc, question) => {
       acc[question.id] = question;
