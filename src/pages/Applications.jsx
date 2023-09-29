@@ -155,9 +155,13 @@ export default function Applications() {
               <UpdateApplicationStatus
                 onUpdate={(status) => {
                   let namesList = '';
-                  names.forEach((name) => {
-                    namesList += `${name}\n `;
-                  });
+                  for (let i = 0; i < names.length; i += 1) {
+                    if (i === names.length - 1) {
+                      namesList += `${names[i]}`;
+                    } else {
+                      namesList += `${names[i]}, `;
+                    }
+                  }
                   setResultingStr(`
                   ${namesList} ${names.length === 1 ? 'was' : 'were'} changed to 
                   ${APPLICATION_STATUSES[status].label}.\nPlease reload the page to view changes.`);
