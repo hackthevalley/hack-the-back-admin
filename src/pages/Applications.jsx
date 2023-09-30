@@ -166,6 +166,8 @@ export default function Applications() {
                   ${namesList} ${names.length === 1 ? 'was' : 'were'} changed to 
                   ${APPLICATION_STATUSES[status].label}.\nPlease reload the page to view changes.`);
                   onOpen();
+                  setIDs([]);
+                  setNames([]);
                 }}
                 status="Applying"
                 ids={ids}
