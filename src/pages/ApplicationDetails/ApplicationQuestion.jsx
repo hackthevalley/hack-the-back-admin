@@ -21,6 +21,7 @@ export default function ApplicationQuestion({ question, field, meta }) {
           <Select
             // eslint-disable-next-line react/jsx-props-no-spreading
             {...field}
+            value={field.value.option || ''}
           >
             <option value="" hidden>
               {question.placeholder}

@@ -13,6 +13,13 @@ import {
   MenuList,
   MenuItem,
   Button,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalCloseButton,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
   HStack,
   VStack,
   InputGroup,
@@ -85,6 +92,8 @@ export default function Applications() {
   } = useTransactionalState(initState);
 
   const [ids, setIDs] = useState([]);
+  const [names, setNames] = useState([]);
+  const [resultingStr, setResultingStr] = useState('');
 
   const setCurrentParams = useCallback((params) => {
     const query = new URLSearchParams(params);
@@ -92,9 +101,25 @@ export default function Applications() {
   }, []);
 
   const options = useMemo(() => ({ queryParams }), [queryParams]);
+  const { onClose, isOpen, onOpen } = useDisclosure();
 
   return (
     <DashboardContent title="Hacker Applications">
+      <Modal
+        isOpen={isOpen}
+        onClose={async () => {
+          await onClose();
+          onClose();
+        }}
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Success</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>{resultingStr}</ModalBody>
+          <ModalFooter />
+        </ModalContent>
+      </Modal>
       <HStack mb="4" spacing="3">
         <InputGroup
           as="form"
@@ -128,7 +153,22 @@ export default function Applications() {
             </MenuButton>
             <MenuList>
               <UpdateApplicationStatus
-                onUpdate={() => window.location.reload()}
+                onUpdate={(status) => {
+                  let namesList = '';
+                  for (let i = 0; i < names.length; i += 1) {
+                    if (i === names.length - 1) {
+                      namesList += `${names[i]}`;
+                    } else {
+                      namesList += `${names[i]}, `;
+                    }
+                  }
+                  setResultingStr(`
+                  ${namesList} ${names.length === 1 ? 'was' : 'were'} changed to 
+                  ${APPLICATION_STATUSES[status].label}.\nPlease reload the page to view changes.`);
+                  onOpen();
+                  setIDs([]);
+                  setNames([]);
+                }}
                 status="Applying"
                 ids={ids}
                 isDisabled={ids.length === 0}
@@ -178,7 +218,11 @@ export default function Applications() {
                     </MenuButton>
                     <MenuList>
                       <UpdateApplicationStatus
-                        onUpdate={() => window.location.reload()}
+                        onUpdate={(status) => {
+                          setResultingStr(`
+                          ${result.user.firstName} ${result.user.lastName} was changed to ${APPLICATION_STATUSES[status].label}.\nPlease reload the page to view the changes.`);
+                          onOpen();
+                        }}
                         status="Applying"
                         ids={[result.id]}
                       />
@@ -195,7 +239,14 @@ export default function Applications() {
                   <Checkbox
                     onChange={(e) => {
                       const newIds = ids.filter((id) => id !== result.id);
-                      if (e.target.checked === true) newIds.push(result.id);
+                      const newNames = names.filter(
+                        (name) => name !== `${result.user.firstName} ${result.user.lastName}`
+                      );
+                      if (e.target.checked === true) {
+                        newIds.push(result.id);
+                        newNames.push(`${result.user.firstName} ${result.user.lastName}`);
+                      }
+                      setNames(newNames);
                       setIDs(newIds);
                     }}
                   />
