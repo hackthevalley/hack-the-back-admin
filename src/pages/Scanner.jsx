@@ -17,9 +17,10 @@ import {
 
 export default function Scanner() {
   const duplicates = new Set();
-  const [code, setCode] = useState('');
   const [info, setInfo] = useState(null);
-  const [question, setQuestion] = useState('T-Shirt Size');
+  const [count, setCount] = useState(0);
+  const [choice, setChoice] = useState('Email');
+  const quickQuestions = ['Dietary Restrictions', 'T-Shirt Size'];
   const { mutate: scan } = useMutate({
     path: `/api/admin/qr/scan`,
     verb: 'POST',
@@ -37,12 +38,11 @@ export default function Scanner() {
       try {
         const data = await scan({ id: result.text });
         setInfo(data.body);
+        setCount(data.scannedCount);
         toast.success(data.message, { id: toastId });
       } catch (error) {
         toast.error(error.data.fallbackMessage, { id: toastId });
-        return;
       }
-      setCode(result.text);
     }
   };
 
@@ -54,22 +54,43 @@ export default function Scanner() {
       <Modal isOpen size="full">
         <ModalOverlay />
         <ModalContent>
+          <Text textAlign="center">Total Scanned: {count} (Scan to update)</Text>
           <QrReader
             constraints={{ facingMode: 'environment' }}
             onResult={handleScan}
             scanDelay={200} // ms
+            containerStyle={{
+              maxWidth: '500px',
+            }}
           />
           {info && (
             <>
-              <Grid rowGap={2} templateColumns="1fr 1fr">
-                <GridItem colSpan={2}>
-                  <Text textAlign="center" fontSize={12} color="lime">
-                    Scanned code: {code} ({info.user.fullName})
+              <Grid rowGap={2} padding="3" paddingTop="0" templateColumns="1fr 1fr 1fr">
+                <GridItem colSpan={1} alignSelf="center">
+                  <Text textAlign="center" fontSize="xs">
+                    Name
                   </Text>
                 </GridItem>
-                <GridItem colSpan={1} colStart={2}>
-                  {/* garbage but good enough */}
-                  <Select value={question} onChange={(event) => setQuestion(event.target.value)}>
+                <GridItem colSpan={2}>
+                  <Input isDisabled value={info.user.fullName} />
+                </GridItem>
+                {quickQuestions.map((question) => (
+                  <>
+                    <GridItem colSpan={1} alignSelf="center">
+                      <Text textAlign="center" fontSize="xs">
+                        {question}
+                      </Text>
+                    </GridItem>
+                    <GridItem colSpan={2}>
+                      <Input
+                        isDisabled
+                        value={info.answers.find((item) => question === item.question).answer}
+                      />
+                    </GridItem>
+                  </>
+                ))}
+                <GridItem colSpan={1}>
+                  <Select value={choice} onChange={(event) => setChoice(event.target.value)}>
                     {info.answers.map((answer) => (
                       <option key={answer.id} value={answer.question}>
                         {answer.question}
@@ -80,11 +101,10 @@ export default function Scanner() {
                 <GridItem colSpan={2}>
                   <Input
                     isDisabled
-                    textAlign="right"
-                    value={info.answers.find((item) => question === item.question).answer}
+                    value={info.answers.find((item) => choice === item.question).answer}
                   />
                 </GridItem>
-                <GridItem colSpan={1}>
+                <GridItem colSpan={1} colStart={2}>
                   <Button width="100%" onClick={handleNext}>
                     Scan next
                   </Button>
