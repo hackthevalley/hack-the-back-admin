@@ -84,7 +84,7 @@ export default function Scanner() {
                     <GridItem colSpan={2}>
                       <Input
                         isDisabled
-                        value={info.answers.find((item) => question === item.question).answer}
+                        value={info.answers.find((item) => question === item.question)?.answer}
                       />
                     </GridItem>
                   </>
@@ -101,7 +101,7 @@ export default function Scanner() {
                 <GridItem colSpan={2}>
                   <Input
                     isDisabled
-                    value={info.answers.find((item) => choice === item.question).answer}
+                    value={info.answers.find((item) => choice === item.question)?.answer}
                   />
                 </GridItem>
                 <GridItem colSpan={1} colStart={2}>
