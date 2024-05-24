@@ -1,5 +1,5 @@
 import { lazy } from 'react';
-import { CgBell, CgHome, CgList, CgUserList, CgQr } from 'react-icons/cg';
+import { CgBell, CgHome, CgList, CgUserList } from 'react-icons/cg';
 
 import DashboardLayout from './components/DashboardLayout';
 import Login from './pages/Login';
@@ -25,11 +25,6 @@ export const dashboardLinks = [
     to: '/comms',
     label: 'Communication Center',
     icon: CgBell,
-  },
-  {
-    to: '/qr',
-    label: 'QR App',
-    icon: CgQr,
   },
 ];
 
@@ -74,11 +69,6 @@ export default [
   {
     path: '/',
     component: dashboardComponent(lazy(() => import('./pages/Home'))),
-    exact: true,
-  },
-  {
-    path: '/qr',
-    component: dashboardComponent(lazy(() => import('./pages/Scanner'))),
     exact: true,
   },
 ];
