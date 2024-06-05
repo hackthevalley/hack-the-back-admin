@@ -86,8 +86,10 @@ export default function Applications() {
 
   const [ids, setIDs] = useState([]);
 
-  const pageSizeSelection = [10, 20, 50, 100, 500];
-  const [pageSize, setPageSize] = useState(10);
+  const pageSizeSelection = [10, 20, 50, 100];
+  const DEFAULT_PAGE_SIZE = 10;
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [pageSelected, setPageSelected] = useState(DEFAULT_PAGE_SIZE);
 
   const setCurrentParams = useCallback((params) => {
     const query = new URLSearchParams(params);
@@ -135,8 +137,11 @@ export default function Applications() {
                   key={size}
                   onClick={() => {
                     setPageSize(size);
+                    setPageSelected(size);
                   }}
                   size="sm"
+                  bg={pageSelected === size ? '#474C5C' : undefined}
+                  color={pageSelected === size ? '#6175EA' : undefined}
                 >
                   {size}
                 </MenuItem>
