@@ -95,6 +95,11 @@ export default function Applications() {
   const [names, setNames] = useState([]);
   const [resultingStr, setResultingStr] = useState('');
 
+  const pageSizeSelection = [10, 20, 50, 100];
+  const DEFAULT_PAGE_SIZE = 10;
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [pageSelected, setPageSelected] = useState(DEFAULT_PAGE_SIZE);
+
   const setCurrentParams = useCallback((params) => {
     const query = new URLSearchParams(params);
     window.history.replaceState(null, null, `?${query}`);
@@ -149,6 +154,29 @@ export default function Applications() {
         <div>
           <Menu>
             <MenuButton as={Button} rightIcon={<CgChevronDown />}>
+              Apps Per Page
+            </MenuButton>
+            <MenuList align="center">
+              {pageSizeSelection.map((size) => (
+                <MenuItem
+                  key={size}
+                  onClick={() => {
+                    setPageSize(size);
+                    setPageSelected(size);
+                  }}
+                  size="sm"
+                  bg={pageSelected === size ? '#474C5C' : undefined}
+                  color={pageSelected === size ? '#6175EA' : undefined}
+                >
+                  {size}
+                </MenuItem>
+              ))}
+            </MenuList>
+          </Menu>
+        </div>
+        <div>
+          <Menu>
+            <MenuButton as={Button} rightIcon={<CgChevronDown />}>
               Batch Actions
             </MenuButton>
             <MenuList>
@@ -183,6 +211,7 @@ export default function Applications() {
         path="/api/admin/forms/hacker_application/responses"
         options={options}
         labels={labels}
+        pageSize={pageSize}
         onPageChange={(page) => {
           setCurrentParams({ ...queryParams, page });
         }}

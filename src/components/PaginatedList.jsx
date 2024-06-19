@@ -27,7 +27,7 @@ import ServerErrorPrompt from './ServerErrorPrompt';
 
 export default function PaginatedList({
   onPageChange = () => {},
-  pageSize = 12,
+  pageSize = 10,
   initPage = 1,
   options = {},
   labels = [],
@@ -56,7 +56,7 @@ export default function PaginatedList({
     }).then(setCurrentPage);
     setEditPage(pageValue);
     setPage(pageValue);
-  }, [options, mutate]);
+  }, [options, mutate, pageSize]);
 
   const memoPage = useRef();
   memoPage.current = onPageChange;
