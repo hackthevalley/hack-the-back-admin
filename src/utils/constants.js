@@ -33,7 +33,7 @@ module.exports = {
       color: 'red',
     },
     WALK_IN: {
-      label: 'Walked Int',
+      label: 'Walked In',
       color: 'green',
     },
   },
