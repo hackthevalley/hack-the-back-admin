@@ -32,6 +32,10 @@ module.exports = {
       label: 'Confirmed Reject',
       color: 'red',
     },
+    WALK_IN: {
+      label: 'Walked In',
+      color: 'green',
+    },
   },
   QUESTION_TYPES: {
     SHORT_TEXT: 'SHORT_TEXT',
