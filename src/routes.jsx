@@ -1,5 +1,5 @@
 import { lazy } from 'react';
-import { CgBell, CgHome, CgList, CgUserList } from 'react-icons/cg';
+import { CgBell, CgController, CgHome, CgList, CgUserList } from 'react-icons/cg';
 
 import DashboardLayout from './components/DashboardLayout';
 import Login from './pages/Login';
@@ -25,6 +25,11 @@ export const dashboardLinks = [
     to: '/comms',
     label: 'Communication Center',
     icon: CgBell,
+  },
+  {
+    to: '/app-controller',
+    label: 'App Controller',
+    icon: CgController,
   },
 ];
 
@@ -69,6 +74,11 @@ export default [
   {
     path: '/',
     component: dashboardComponent(lazy(() => import('./pages/Home'))),
+    exact: true,
+  },
+  {
+    path: '/app-controller',
+    component: dashboardComponent(lazy(() => import('./pages/ApplicationControls'))),
     exact: true,
   },
 ];
