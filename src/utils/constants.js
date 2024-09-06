@@ -36,6 +36,10 @@ module.exports = {
       label: 'Walked In',
       color: 'green',
     },
+    WALK_IN_SUBMITTED: {
+      label: 'Walked In (Submitted)',
+      color: 'green',
+    },
   },
   QUESTION_TYPES: {
     SHORT_TEXT: 'SHORT_TEXT',
