@@ -18,7 +18,7 @@ export default function CountdownTimer({ date }) {
     if (!date || date.getTime() < new Date().getTime()) return () => {};
     const updateRemainingTime = setInterval(() => {
       const now = new Date().getTime();
-      const difference = date.getTime() - now;
+      const difference = date - now;
 
       setRemainingTime({
         months: Math.floor(difference / (1000 * 60 * 60 * 24 * 30)).toString(),

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useMutate } from 'restful-react';
+import { useEffect, useState } from 'react';
+import { useGet, useMutate } from 'restful-react';
 
 import {
   Box,
@@ -19,15 +19,28 @@ import {
 import CountdownTimer from '../components/CountdownTimer';
 
 export default function ApplicationControls() {
-  //  const [eventDate, setEventDate] = useState('');
+  const [eventDate, setEventDate] = useState('');
+  const [appId, setappId] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [alert, setAlert] = useState({ type: '', message: '', isVisible: false });
 
   const { mutate: control } = useMutate({
-    path: '/api/admin/app-controls/eb291c9f-a7ad-4ddc-848d-a65791aba25d',
+    path: `/api/admin/app-controls/${appId}`,
     verb: 'PATCH',
   });
+
+  const { data: eventData } = useGet({
+    path: '/api/admin/app-controls',
+    verb: 'GET',
+  });
+
+  useEffect(() => {
+    if (eventData) {
+      setEventDate(eventData.startAt);
+      setappId(eventData.id);
+    }
+  }, [eventData]);
 
   const handleSubmit = async () => {
     if (startDate && endDate) {
@@ -38,11 +51,10 @@ export default function ApplicationControls() {
       });
 
       try {
-        const res = await control({
+        await control({
           start_at: new Date(startDate).toISOString(),
           end_at: new Date(endDate).toISOString(),
         });
-        console.log(res);
       } catch (error) {
         setAlert({
           type: 'error',
@@ -124,7 +136,7 @@ export default function ApplicationControls() {
         justifyContent="center"
         alignItems="center"
       >
-        <CountdownTimer date={new Date('2024-11-04')} />
+        <CountdownTimer date={new Date(eventDate)} />
       </Box>
     </Flex>
   );
