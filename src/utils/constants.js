@@ -34,6 +34,10 @@ module.exports = {
     },
     WALK_IN: {
       label: 'Walked In',
+      color: 'cyan',
+    },
+    WALK_IN_SUBMIT: {
+      label: 'Walked In (Submitted)',
       color: 'green',
     },
   },
