@@ -17,6 +17,11 @@ export const dashboardLinks = [
     icon: CgList,
   },
   {
+    to: '/app-controller',
+    label: 'App Controller',
+    icon: CgController,
+  },
+  {
     to: '/users',
     label: 'Users',
     icon: CgUserList,
@@ -25,11 +30,6 @@ export const dashboardLinks = [
     to: '/comms',
     label: 'Communication Center',
     icon: CgBell,
-  },
-  {
-    to: '/app-controller',
-    label: 'App Controller',
-    icon: CgController,
   },
 ];
 
@@ -67,6 +67,11 @@ export default [
     exact: true,
   },
   {
+    path: '/app-controller',
+    component: dashboardComponent(lazy(() => import('./pages/ApplicationControls'))),
+    exact: true,
+  },
+  {
     path: '/apps/:id',
     component: dashboardComponent(lazy(() => import('./pages/ApplicationDetails'))),
     exact: true,
@@ -74,11 +79,6 @@ export default [
   {
     path: '/',
     component: dashboardComponent(lazy(() => import('./pages/Home'))),
-    exact: true,
-  },
-  {
-    path: '/app-controller',
-    component: dashboardComponent(lazy(() => import('./pages/ApplicationControls'))),
     exact: true,
   },
 ];
