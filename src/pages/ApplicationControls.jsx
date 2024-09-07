@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useMutate } from 'restful-react';
 
 import {
   Box,
@@ -18,20 +19,37 @@ import {
 import CountdownTimer from '../components/CountdownTimer';
 
 export default function ApplicationControls() {
-  const [EventDate, setEventDate] = useState('');
+  //  const [eventDate, setEventDate] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [alert, setAlert] = useState({ type: '', message: '', isVisible: false });
 
-  const handleSubmit = () => {
+  const { mutate: control } = useMutate({
+    path: '/api/admin/app-controls/eb291c9f-a7ad-4ddc-848d-a65791aba25d',
+    verb: 'PATCH',
+  });
+
+  const handleSubmit = async () => {
     if (startDate && endDate) {
       setAlert({
         type: 'success',
         message: 'The dates have been submitted successfully.',
         isVisible: true,
       });
-      console.log(`Start Date: ${startDate}`);
-      console.log(`End Date: ${endDate}`);
+
+      try {
+        const res = await control({
+          start_at: new Date(startDate).toISOString(),
+          end_at: new Date(endDate).toISOString(),
+        });
+        console.log(res);
+      } catch (error) {
+        setAlert({
+          type: 'error',
+          message: 'Please fill in all dates before submitting.',
+          isVisible: true,
+        });
+      }
     } else {
       setAlert({
         type: 'error',
@@ -59,17 +77,6 @@ export default function ApplicationControls() {
           Application Controls
         </Heading>
         <Flex direction="column" gap={4}>
-          <FormControl id="hackathon-date">
-            <FormLabel fontSize="md" fontWeight="bold">
-              Hack the Valley Date
-            </FormLabel>
-            <Input
-              type="date"
-              name="hackathon-date"
-              value={EventDate}
-              onChange={(e) => setEventDate(e.target.value)}
-            />
-          </FormControl>
           <FormControl id="start-date" mt={4}>
             <FormLabel fontSize="md" fontWeight="bold">
               Start Date
@@ -117,7 +124,7 @@ export default function ApplicationControls() {
         justifyContent="center"
         alignItems="center"
       >
-        <CountdownTimer date={} />
+        <CountdownTimer date={new Date('2024-11-04')} />
       </Box>
     </Flex>
   );
