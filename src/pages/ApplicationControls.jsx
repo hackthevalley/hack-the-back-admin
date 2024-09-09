@@ -19,10 +19,14 @@ import {
 import CountdownTimer from '../components/CountdownTimer';
 
 export default function ApplicationControls() {
-  const [eventDate, setEventDate] = useState('');
+  const [eventDetails, setEventDetails] = useState({
+    date: null,
+    isVisible: false,
+    action: 'HTV Applications are CLOSED!',
+  });
   const [appId, setappId] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
   const [alert, setAlert] = useState({ type: '', message: '', isVisible: false });
 
   const { mutate: control } = useMutate({
@@ -35,25 +39,56 @@ export default function ApplicationControls() {
     verb: 'GET',
   });
 
+  const timerMessageCheck = (start, end) => {
+    const currentDate = new Date();
+    if (currentDate < start) {
+      setEventDetails({
+        date: start,
+        isVisible: true,
+        action: 'HTV Applications Opens in ...',
+      });
+    } else if (currentDate >= start && currentDate < end) {
+      setEventDetails({
+        date: end,
+        isVisible: true,
+        action: 'HTV Applications Closes in ...',
+      });
+    } else {
+      setEventDetails({
+        date: null,
+        isVisible: false,
+        action: 'HTV Applications are CLOSED!',
+      });
+    }
+  };
+
   useEffect(() => {
     if (eventData) {
-      setEventDate(eventData.startAt);
       setappId(eventData.id);
+      const start = new Date(eventData.startAt);
+      const end = new Date(eventData.endAt);
+      setStartDate(start.toISOString().split('T')[0]);
+      setEndDate(end.toISOString().split('T')[0]);
+      timerMessageCheck(start, end);
     }
   }, [eventData]);
 
   const handleSubmit = async () => {
     if (startDate && endDate) {
-      setAlert({
-        type: 'success',
-        message: 'The dates have been submitted successfully.',
-        isVisible: true,
-      });
-
       try {
         await control({
           start_at: new Date(startDate).toISOString(),
           end_at: new Date(endDate).toISOString(),
+        });
+
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        timerMessageCheck(start, end);
+
+        setAlert({
+          type: 'success',
+          message: 'The dates have been submitted successfully.',
+          isVisible: true,
         });
       } catch (error) {
         setAlert({
@@ -91,7 +126,7 @@ export default function ApplicationControls() {
         <Flex direction="column" gap={4}>
           <FormControl id="start-date" mt={4}>
             <FormLabel fontSize="md" fontWeight="bold">
-              Start Date
+              Start Date (yyyy-mm-dd)
             </FormLabel>
             <Input
               type="date"
@@ -102,7 +137,7 @@ export default function ApplicationControls() {
           </FormControl>
           <FormControl id="end-date" mt={4}>
             <FormLabel fontSize="md" fontWeight="bold">
-              End Date
+              End Date (yyyy-mm-dd)
             </FormLabel>
             <Input
               type="date"
@@ -136,7 +171,13 @@ export default function ApplicationControls() {
         justifyContent="center"
         alignItems="center"
       >
-        <CountdownTimer date={new Date(eventDate)} />
+        {eventDetails.isVisible ? (
+          <CountdownTimer date={new Date(eventDetails.date)} action={eventDetails.action} />
+        ) : (
+          <Heading as="h1" size="xl" mb={3}>
+            {eventDetails.action}
+          </Heading>
+        )}
       </Box>
     </Flex>
   );

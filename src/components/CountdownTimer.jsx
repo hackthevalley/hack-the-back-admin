@@ -5,7 +5,7 @@ import { Box, Flex, Heading, Text } from '@chakra-ui/react';
 
 const padNum = (num) => (num.toString().length === 1 ? `0${num}` : num.toString());
 
-export default function CountdownTimer({ date }) {
+export default function CountdownTimer({ date, action }) {
   const [remainingTime, setRemainingTime] = useState({
     months: '0',
     days: '00',
@@ -35,7 +35,7 @@ export default function CountdownTimer({ date }) {
   return (
     <Box textAlign="center" color="white">
       <Heading as="h1" size="xl" mb={3}>
-        Hack the Valley 9 is in ...
+        {action}
       </Heading>
       <Flex justify="center" align="center" wrap="wrap" fontSize="4xl" textAlign="center">
         {remainingTime.months !== '0' && (
@@ -85,4 +85,5 @@ export default function CountdownTimer({ date }) {
 
 CountdownTimer.propTypes = {
   date: PropTypes.instanceOf(Date),
+  action: PropTypes.string,
 };
