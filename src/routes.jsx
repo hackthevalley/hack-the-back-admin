@@ -1,5 +1,5 @@
 import { lazy } from 'react';
-import { CgBell, CgHome, CgList, CgUserList } from 'react-icons/cg';
+import { CgBell, CgController, CgHome, CgList, CgUserList } from 'react-icons/cg';
 
 import DashboardLayout from './components/DashboardLayout';
 import Login from './pages/Login';
@@ -15,6 +15,11 @@ export const dashboardLinks = [
     to: '/apps',
     label: 'Hacker Apps',
     icon: CgList,
+  },
+  {
+    to: '/app-controller',
+    label: 'App Controller',
+    icon: CgController,
   },
   {
     to: '/users',
@@ -59,6 +64,11 @@ export default [
   {
     path: '/apps',
     component: dashboardComponent(lazy(() => import('./pages/Applications'))),
+    exact: true,
+  },
+  {
+    path: '/app-controller',
+    component: dashboardComponent(lazy(() => import('./pages/ApplicationControls'))),
     exact: true,
   },
   {
