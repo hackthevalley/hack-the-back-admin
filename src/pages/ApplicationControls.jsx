@@ -91,9 +91,11 @@ export default function ApplicationControls() {
           isVisible: true,
         });
       } catch (error) {
+        console.log(error);
+        // error.data.detail.nonFieldErrors[0]
         setAlert({
           type: 'error',
-          message: 'Please fill in all dates before submitting.',
+          message: error.data.detail.nonFieldErrors[0],
           isVisible: true,
         });
       }
