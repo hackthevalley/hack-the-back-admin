@@ -41,6 +41,10 @@ export default function FoodServings() {
         message: 'Please select both a day and a meal before updating.',
       });
     }
+
+    setTimeout(() => {
+      setAlert({ ...alert, isVisible: false });
+    }, 5000);
   };
 
   const handleCloseAlert = () => {
