@@ -1,5 +1,5 @@
 import { lazy } from 'react';
-import { CgBell, CgController, CgHome, CgList, CgUserList } from 'react-icons/cg';
+import { CgBell, CgController, CgBowl, CgHome, CgList, CgUserList } from 'react-icons/cg';
 
 import DashboardLayout from './components/DashboardLayout';
 import Login from './pages/Login';
@@ -20,6 +20,11 @@ export const dashboardLinks = [
     to: '/app-controller',
     label: 'App Controller',
     icon: CgController,
+  },
+  {
+    to: '/food-servings',
+    label: 'Food Servings',
+    icon: CgBowl,
   },
   {
     to: '/users',
@@ -69,6 +74,11 @@ export default [
   {
     path: '/app-controller',
     component: dashboardComponent(lazy(() => import('./pages/ApplicationControls'))),
+    exact: true,
+  },
+  {
+    path: '/food-servings',
+    component: dashboardComponent(lazy(() => import('./pages/FoodServings'))),
     exact: true,
   },
   {
