@@ -53,11 +53,11 @@ export function AuthProvider({ children }) {
   });
 
   const { mutate: getMe, loading } = useMutate({ path: '/api/account/users/me', verb: 'GET' });
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [user, setUser] = useState(false);
 
   const logout = useCallback(() => {
-    window.localStorage.removeItem('auth-token');
+    localStorage.removeItem('auth-token');
     setIsAuthenticated(false);
     setUser(null);
   }, []);
@@ -65,7 +65,7 @@ export function AuthProvider({ children }) {
   const login = useCallback(
     async (token) => {
       try {
-        window.localStorage.setItem('auth-token', token);
+        localStorage.setItem('auth-token', token);
         const payload = jwt.decode(token);
         if (!payload.isStaffUser) throw new Error('You do not have access');
         const res = await getMe();
@@ -73,7 +73,7 @@ export function AuthProvider({ children }) {
         setUser(res);
         return res;
       } catch (err) {
-        window.localStorage.removeItem('auth-token');
+        localStorage.removeItem('auth-token');
         throw err;
       }
     },
@@ -82,13 +82,16 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const handler = async () => {
-      const token = window.localStorage.getItem('auth-token');
-      if (!token) return;
-
+      const token = localStorage.getItem('auth-token');
+      if (token) setIsAuthenticated(true);
+      if (!token) {
+        setIsAuthenticated(false);
+        return;
+      }
       try {
         const newJwt = await refresh({ token });
         if (!newJwt.payload.isStaffUser) throw new Error('You do not have access');
-        window.localStorage.setItem('auth-token', newJwt.token);
+        localStorage.setItem('auth-token', newJwt.token);
       } catch (err) {
         // eslint-disable-next-line no-console
         console.error(err);
@@ -104,7 +107,6 @@ export function AuthProvider({ children }) {
       window.clearInterval(timer);
     };
   }, [logout]);
-
   return (
     <UserContext.Provider value={{ login, logout, loading, isAuthenticated, user }}>
       {children}
