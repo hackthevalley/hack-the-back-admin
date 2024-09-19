@@ -57,7 +57,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(false);
 
   const logout = useCallback(() => {
-    localStorage.removeItem('auth-token');
+    window.localStorage.removeItem('auth-token');
     setIsAuthenticated(false);
     setUser(null);
   }, []);
@@ -65,7 +65,7 @@ export function AuthProvider({ children }) {
   const login = useCallback(
     async (token) => {
       try {
-        localStorage.setItem('auth-token', token);
+        window.localStorage.setItem('auth-token', token);
         const payload = jwt.decode(token);
         if (!payload.isStaffUser) throw new Error('You do not have access');
         const res = await getMe();
@@ -73,7 +73,7 @@ export function AuthProvider({ children }) {
         setUser(res);
         return res;
       } catch (err) {
-        localStorage.removeItem('auth-token');
+        window.localStorage.removeItem('auth-token');
         throw err;
       }
     },
@@ -91,7 +91,7 @@ export function AuthProvider({ children }) {
       try {
         const newJwt = await refresh({ token });
         if (!newJwt.payload.isStaffUser) throw new Error('You do not have access');
-        localStorage.setItem('auth-token', newJwt.token);
+        window.localStorage.setItem('auth-token', newJwt.token);
       } catch (err) {
         // eslint-disable-next-line no-console
         console.error(err);
