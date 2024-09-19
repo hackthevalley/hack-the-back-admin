@@ -53,7 +53,7 @@ export function AuthProvider({ children }) {
   });
 
   const { mutate: getMe, loading } = useMutate({ path: '/api/account/users/me', verb: 'GET' });
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [user, setUser] = useState(false);
 
   const logout = useCallback(() => {
@@ -82,9 +82,12 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const handler = async () => {
-      const token = window.localStorage.getItem('auth-token');
-      if (!token) return;
-
+      const token = localStorage.getItem('auth-token');
+      if (token) setIsAuthenticated(true);
+      if (!token) {
+        setIsAuthenticated(false);
+        return;
+      }
       try {
         const newJwt = await refresh({ token });
         if (!newJwt.payload.isStaffUser) throw new Error('You do not have access');
@@ -104,7 +107,6 @@ export function AuthProvider({ children }) {
       window.clearInterval(timer);
     };
   }, [logout]);
-
   return (
     <UserContext.Provider value={{ login, logout, loading, isAuthenticated, user }}>
       {children}
