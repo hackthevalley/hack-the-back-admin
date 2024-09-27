@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useGet } from 'restful-react';
 
 import {
   Box,
@@ -19,7 +20,26 @@ import {
 export default function FoodServings() {
   const [selectedDay, setSelectedDay] = useState('');
   const [selectedMeals, setSelectedMeals] = useState('');
+  const [nowServing, setNowServing] = useState('');
   const [alert, setAlert] = useState({ isVisible: false, message: '' });
+
+  const { data: allFoodData } = useGet({
+    path: '/api/admin/food',
+    verb: 'GET',
+  });
+
+  useEffect(() => {
+    if (allFoodData) {
+      const { allFood, currentMeal } = allFoodData;
+      const meal = allFood.filter((food) => food.id === currentMeal[0]);
+      if (meal.length === 0) {
+        setNowServing('No meal currently being served!');
+        return;
+      }
+      const mealString = `Now Serving: Day ${meal[0].day} ${meal[0].name}`;
+      setNowServing(mealString);
+    }
+  }, [allFoodData]);
 
   const handleDayChange = (day) => {
     setSelectedDay(day);
@@ -35,6 +55,7 @@ export default function FoodServings() {
         isVisible: true,
         message: `You selected Day ${selectedDay} ${selectedMeals}`,
       });
+      console.log('day', selectedDay, 'meal', selectedMeals);
     } else {
       setAlert({
         isVisible: true,
@@ -88,17 +109,17 @@ export default function FoodServings() {
 
   return (
     <Flex direction="column" gap={6}>
-      <Heading as="h1" size="lg" mb={6}>
+      <Heading as="h1" size="xl" mb={6}>
         Food Servings
       </Heading>
       <Box flex="1" borderWidth="1px" borderRadius="lg" boxShadow="md" p={6}>
         <Box>
-          <Heading as="h2" size="md" mb={4}>
-            Now serving ___________
+          <Heading as="h2" size="lg" mb={4}>
+            {nowServing}
           </Heading>
         </Box>
         <Box>
-          <Heading as="h2" size="md" mb={8}>
+          <Heading as="h2" size="md" mb={7}>
             Selected Meal:
             {selectedDay ? ` Day ${selectedDay} ${selectedMeals}` : ' No option selected'}
           </Heading>
