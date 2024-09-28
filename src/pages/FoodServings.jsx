@@ -21,6 +21,7 @@ export default function FoodServings() {
   const [selectedDay, setSelectedDay] = useState('');
   const [selectedMeal, setSelectedMeal] = useState('');
   const [nowServing, setNowServing] = useState('');
+  const [eachDayFood, setEachDayFood] = useState([]);
   const [requestedFoodId, setRequestedFoodId] = useState('');
   const [alert, setAlert] = useState({ isVisible: false, message: '' });
 
@@ -34,15 +35,29 @@ export default function FoodServings() {
     verb: 'PATCH',
   });
 
+  const groupFoodByDay = (foodData) => {
+    const dayForFood = {};
+    foodData.forEach((item) => {
+      if (dayForFood[item.day]) {
+        dayForFood[item.day].push(item);
+      } else {
+        dayForFood[item.day] = [item];
+      }
+    });
+    return dayForFood;
+  };
+
   useEffect(() => {
     if (allFoodData) {
       const { allFood, currentMeal } = allFoodData;
+      setEachDayFood(groupFoodByDay(allFood));
       const meal = allFood.filter((food) => food.id === currentMeal[0]);
       if (meal.length === 0) {
         setNowServing('No meal currently being served!');
         return;
       }
-      const mealString = `Now Serving: Day ${meal[0].day} ${meal[0].name}`;
+      const mealString = `Now Serving: Day ${meal[0].day} 
+      ${meal[0].name.charAt(0).toUpperCase() + meal[0].name.slice(1)}`;
       setNowServing(mealString);
     }
   }, [allFoodData]);
@@ -71,7 +86,6 @@ export default function FoodServings() {
           message: `You selected Day ${selectedDay} ${selectedMeal}`,
         });
       } catch (error) {
-        console.log(error);
         setAlert({
           type: 'error',
           isVisible: true,
@@ -95,39 +109,36 @@ export default function FoodServings() {
     setAlert({ ...alert, isVisible: false });
   };
 
+  const renderDayOptions = () => (
+    <RadioGroup value={selectedDay} onChange={handleDayChange}>
+      <Stack direction="column">
+        {Object.keys(eachDayFood).map((day) => (
+          <Radio key={day} value={day}>
+            Day {day}
+          </Radio>
+        ))}
+      </Stack>
+    </RadioGroup>
+  );
+
   const renderMealOptions = () => {
-    switch (selectedDay) {
-      case '1':
-        return (
-          <RadioGroup value={selectedMeal} onChange={(value) => handleMealChange(value)}>
-            <Stack direction="column">
-              <Radio value="lunch">Lunch</Radio>
-              <Radio value="dinner">Dinner</Radio>
-            </Stack>
-          </RadioGroup>
-        );
-      case '2':
-        return (
-          <RadioGroup value={selectedMeal} onChange={(value) => handleMealChange(value)}>
-            <Stack direction="column">
-              <Radio value="breakfast">Breakfast</Radio>
-              <Radio value="lunch">Lunch</Radio>
-              <Radio value="dinner">Dinner</Radio>
-            </Stack>
-          </RadioGroup>
-        );
-      case '3':
-        return (
-          <RadioGroup value={selectedMeal} onChange={(value) => handleMealChange(value)}>
-            <Stack direction="column">
-              <Radio value="breakfast">Breakfast</Radio>
-              <Radio value="lunch">Lunch</Radio>
-            </Stack>
-          </RadioGroup>
-        );
-      default:
-        return <Text>Please select a day first.</Text>;
+    if (!selectedDay) {
+      return <Text>Please select a day first.</Text>;
     }
+
+    const meals = eachDayFood[parseInt(selectedDay, 10)].map((foodItem) => foodItem.name);
+
+    return (
+      <RadioGroup value={selectedMeal} onChange={(value) => handleMealChange(value)}>
+        <Stack direction="column">
+          {meals.map((meal) => (
+            <Radio key={meal} value={meal}>
+              {meal.charAt(0).toUpperCase() + meal.slice(1)}
+            </Radio>
+          ))}
+        </Stack>
+      </RadioGroup>
+    );
   };
 
   return (
@@ -151,13 +162,7 @@ export default function FoodServings() {
           <Heading as="h2" size="md" mb={4}>
             Select Day
           </Heading>
-          <RadioGroup value={selectedDay} onChange={handleDayChange}>
-            <Stack direction="column">
-              <Radio value="1">Day 1</Radio>
-              <Radio value="2">Day 2</Radio>
-              <Radio value="3">Day 3</Radio>
-            </Stack>
-          </RadioGroup>
+          {renderDayOptions()}
         </Box>
 
         <Box mb={6}>
