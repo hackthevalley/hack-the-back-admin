@@ -85,6 +85,7 @@ export default function FoodServings() {
           isVisible: true,
           message: `You selected Day ${selectedDay} ${selectedMeal}`,
         });
+        setNowServing(`Now Serving: Day ${selectedDay} ${selectedMeal}`);
       } catch (error) {
         setAlert({
           type: 'error',
@@ -127,11 +128,13 @@ export default function FoodServings() {
     }
 
     const meals = eachDayFood[parseInt(selectedDay, 10)].map((foodItem) => foodItem.name);
+    const orderedMeals = ['breakfast', 'lunch', 'dinner'];
+    const sortedMeals = meals.sort((a, b) => orderedMeals.indexOf(a) - orderedMeals.indexOf(b));
 
     return (
       <RadioGroup value={selectedMeal} onChange={(value) => handleMealChange(value)}>
         <Stack direction="column">
-          {meals.map((meal) => (
+          {sortedMeals.map((meal) => (
             <Radio key={meal} value={meal}>
               {meal.charAt(0).toUpperCase() + meal.slice(1)}
             </Radio>
