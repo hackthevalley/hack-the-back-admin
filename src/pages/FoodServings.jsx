@@ -64,6 +64,7 @@ export default function FoodServings() {
 
   const handleDayChange = (day) => {
     setSelectedDay(day);
+    setSelectedMeal('');
   };
 
   const handleMealChange = (meal) => {
@@ -97,7 +98,7 @@ export default function FoodServings() {
       setAlert({
         type: 'error',
         isVisible: true,
-        message: 'Please select both a day and a meal before updating.',
+        message: 'Invalid inputs. Please recheck the options selected.',
       });
     }
 
@@ -126,10 +127,11 @@ export default function FoodServings() {
     if (!selectedDay) {
       return <Text>Please select a day first.</Text>;
     }
-
     const meals = eachDayFood[parseInt(selectedDay, 10)].map((foodItem) => foodItem.name);
     const orderedMeals = ['breakfast', 'lunch', 'dinner'];
-    const sortedMeals = meals.sort((a, b) => orderedMeals.indexOf(a) - orderedMeals.indexOf(b));
+    const sortedMeals = meals.sort(
+      (a, b) => orderedMeals.indexOf(a.toLowerCase()) - orderedMeals.indexOf(b.toLowerCase())
+    );
 
     return (
       <RadioGroup value={selectedMeal} onChange={(value) => handleMealChange(value)}>
