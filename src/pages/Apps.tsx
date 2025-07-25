@@ -2,7 +2,7 @@ import { useContext, useEffect } from "react";
 import { UserContext } from "@/utils/auth";
 import { useNavigate } from "react-router";
 import NavMenu from "@/components/Navmenu";
-import Applicant from "@/components/Applicant";
+import { Applicants } from "@/components/Applicants";
 
 function Apps() {
   const { isAuthenticated } = useContext(UserContext) ?? {};
@@ -15,14 +15,7 @@ function Apps() {
   return (
     <div className="flex h-screen">
       <NavMenu />
-      <Applicant
-        first_name="Conrad"
-        last_name="Mo"
-        email="conrad.mo@mail.utoronto.ca"
-        status="Applied"
-        updated_at="yes"
-        created_at="yes"
-      />
+      <Applicants />
     </div>
   );
 }
