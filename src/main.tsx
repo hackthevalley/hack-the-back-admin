@@ -15,5 +15,5 @@ createRoot(document.getElementById("root")!).render(
         <Route path="/apps" element={<Apps />} />
       </Routes>
     </AuthProvider>
-  </BrowserRouter>,
+  </BrowserRouter>
 );
