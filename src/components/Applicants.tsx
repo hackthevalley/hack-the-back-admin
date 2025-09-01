@@ -35,7 +35,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-interface ApplicantProps {
+export interface ApplicantProps {
   first_name: string;
   last_name: string;
   email: string;
@@ -184,50 +184,7 @@ export const columns: ColumnDef<ApplicantProps>[] = [
 ];
 
 export function Applicants({ applicants }: { applicants?: ApplicantProps[] }) {
-  // data is a substitute for applicants
-  // Mock data
-  const data = [
-    {
-      first_name: "Preston",
-      last_name: "Tom-Ying",
-      email: "asdasda@gmail.com",
-      status: "rejected",
-      created_at: "Some date",
-      updated_at: "updated date",
-    },
-    {
-      first_name: "Conrad",
-      last_name: "Mo",
-      email: "conradFemboy@gmail.com",
-      status: "Accepted",
-      created_at: "Some date",
-      updated_at: "updated date",
-    },
-    {
-      first_name: "Shreyas",
-      last_name: "Rao",
-      email: "shreyas@gmail.com",
-      status: "Accepted",
-      created_at: "Some date",
-      updated_at: "updated date",
-    },
-    {
-      first_name: "Kate",
-      last_name: "ummmm",
-      email: "KateEmail@gmail.com",
-      status: "Accepted",
-      created_at: "Some date",
-      updated_at: "updated date",
-    },
-    {
-      first_name: "Aran",
-      last_name: "Saseelan",
-      email: "aranEmail@gmail.com",
-      status: "waitlisted",
-      created_at: "Some date",
-      updated_at: "updated date",
-    },
-  ];
+  const data = applicants ?? [];
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
