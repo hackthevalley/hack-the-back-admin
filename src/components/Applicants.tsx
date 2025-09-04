@@ -61,194 +61,8 @@ export interface ApplicantProps {
   updated_at: string;
 }
 
-const handleApplicantAction = async (action: string, app_id: string) => {
-  try {
-    const res = await fetchInstance(
-      `admin/account/updatestatus/${app_id}?request=${action}`,
-      { method: "PUT" }
-    );
-
-    if (res.application_id == app_id) {
-      switch (action) {
-        case Status.ACCEPTED:
-          toast.success("Applicant accepted", {
-            icon: <CheckCircle className="text-green-500" />,
-          });
-          break;
-        case Status.WAITLISTED:
-          toast("Applicant waitlisted", {
-            icon: <AlertTriangle className="text-yellow-500" />,
-          });
-          break;
-        case Status.REJECTED:
-          toast.error("Applicant rejected", {
-            icon: <XCircle className="text-red-500" />,
-          });
-          break;
-        default:
-          toast("Status updated");
-      }
-    } else {
-      toast.warning("Action Failed...");
-    }
-  } catch (error) {
-    toast.error("An error occurred while trying update status of applicant...");
-  }
-};
-
-export const columns: ColumnDef<ApplicantProps>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value: boolean) =>
-          table.toggleAllPageRowsSelected(!!value)
-        }
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value: boolean) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "first_name",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          First Name
-          <ArrowUpDown />
-        </Button>
-      );
-    },
-    cell: ({ row }) => <div className="">{row.getValue("first_name")}</div>,
-  },
-  {
-    accessorKey: "last_name",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Last Name
-          <ArrowUpDown />
-        </Button>
-      );
-    },
-    cell: ({ row }) => <div className="">{row.getValue("last_name")}</div>,
-  },
-  {
-    accessorKey: "email",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Email
-          <ArrowUpDown />
-        </Button>
-      );
-    },
-    cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("status")}</div>
-    ),
-  },
-  {
-    accessorKey: "created_at",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Created At
-          <ArrowUpDown />
-        </Button>
-      );
-    },
-    cell: ({ row }) => (
-      <div className="lowercase">{row.getValue("created_at")}</div>
-    ),
-  },
-  {
-    accessorKey: "updated_at",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Last Updated
-          <ArrowUpDown />
-        </Button>
-      );
-    },
-    cell: ({ row }) => (
-      <div className="lowercase">{row.getValue("updated_at")}</div>
-    ),
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => {
-      const applicant = row.original;
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>View Applicant</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => handleApplicantAction(Status.ACCEPTED, applicant.app_id)}
-            >
-              Accept Applicant
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => handleApplicantAction(Status.WAITLISTED, applicant.app_id)}
-            >
-              Waitlist Applicant
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => handleApplicantAction(Status.REJECTED, applicant.app_id)}
-            >
-              Reject Applicant
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-  },
-];
-
 export function Applicants({ applicants }: { applicants?: ApplicantProps[] }) {
-  const data = applicants ?? [];
+  const [data, setData] = React.useState(applicants ?? []);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -256,6 +70,210 @@ export function Applicants({ applicants }: { applicants?: ApplicantProps[] }) {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+
+  React.useEffect(() => {
+    if (applicants) {
+      setData(applicants);
+    }
+  }, [applicants]);
+
+  const updateApplicationStatus = (id: string, newStatus: Status) => {
+    setData((previousData) =>
+      previousData.map((applicant) =>
+        applicant.app_id === id
+          ? {...applicant, status: newStatus, updated_at: new Date().toISOString()}
+          : applicant
+      )
+    );
+  };
+
+  const handleApplicantAction = async (action: Status, app_id: string) => {
+    try {
+      const res = await fetchInstance(
+        `admin/account/updatestatus/${app_id}?request=${action}`,
+        { method: "PUT" }
+      );
+  
+      if (res.application_id == app_id) {
+        updateApplicationStatus(app_id, action);
+        switch (action) {
+          case Status.ACCEPTED:
+            toast.success("Applicant accepted", {
+              icon: <CheckCircle className="text-green-500" />,
+            });
+            break;
+          case Status.WAITLISTED:
+            toast("Applicant waitlisted", {
+              icon: <AlertTriangle className="text-yellow-500" />,
+            });
+            break;
+          case Status.REJECTED:
+            toast.error("Applicant rejected", {
+              icon: <XCircle className="text-red-500" />,
+            });
+            break;
+          default:
+            toast("Status updated");
+        }
+      } else {
+        toast.warning("Action Failed...");
+      }
+    } catch (error) {
+      toast.error("An error occurred while trying update status of applicant...");
+    }
+  };
+
+  const columns: ColumnDef<ApplicantProps>[] = [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(value: boolean) =>
+            table.toggleAllPageRowsSelected(!!value)
+          }
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value: boolean) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: "first_name",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            First Name
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div className="">{row.getValue("first_name")}</div>,
+    },
+    {
+      accessorKey: "last_name",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Last Name
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div className="">{row.getValue("last_name")}</div>,
+    },
+    {
+      accessorKey: "email",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Email
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => (
+        <div className="capitalize">{row.getValue("status")}</div>
+      ),
+    },
+    {
+      accessorKey: "created_at",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Created At
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => (
+        <div className="lowercase">{row.getValue("created_at")}</div>
+      ),
+    },
+    {
+      accessorKey: "updated_at",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Last Updated
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => (
+        <div className="lowercase">{row.getValue("updated_at")}</div>
+      ),
+    },
+    {
+      id: "actions",
+      enableHiding: false,
+      cell: ({ row }) => {
+        const applicant = row.original;
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>View Applicant</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => handleApplicantAction(Status.ACCEPTED, applicant.app_id)}
+              >
+                Accept Applicant
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleApplicantAction(Status.WAITLISTED, applicant.app_id)}
+              >
+                Waitlist Applicant
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleApplicantAction(Status.REJECTED, applicant.app_id)}
+              >
+                Reject Applicant
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ];
+
   const table = useReactTable({
     data,
     columns,
