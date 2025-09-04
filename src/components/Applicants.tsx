@@ -86,6 +86,28 @@ export function Applicants({ applicants }: { applicants?: ApplicantProps[] }) {
       )
     );
   };
+  
+  const showToast = (action: Status, msg?: string, ) => {
+    switch (action) {
+      case Status.ACCEPTED:
+        toast.success(`${msg} Applicant(s) accepted`, {
+          icon: <CheckCircle className="text-green-500" />,
+        });
+        break;
+      case Status.WAITLISTED:
+        toast(`${msg} Applicant(s) waitlisted`, {
+          icon: <AlertTriangle className="text-yellow-500" />,
+        });
+        break;
+      case Status.REJECTED:
+        toast.error(`${msg} Applicant(s) rejected`, {
+          icon: <XCircle className="text-red-500" />,
+        });
+        break;
+      default:
+        toast("Status updated");
+    }
+  }
 
   const handleApplicantAction = async (action: Status, app_id: string) => {
     try {
@@ -96,25 +118,7 @@ export function Applicants({ applicants }: { applicants?: ApplicantProps[] }) {
   
       if (res.application_id == app_id) {
         updateApplicationStatus(app_id, action);
-        switch (action) {
-          case Status.ACCEPTED:
-            toast.success("Applicant accepted", {
-              icon: <CheckCircle className="text-green-500" />,
-            });
-            break;
-          case Status.WAITLISTED:
-            toast("Applicant waitlisted", {
-              icon: <AlertTriangle className="text-yellow-500" />,
-            });
-            break;
-          case Status.REJECTED:
-            toast.error("Applicant rejected", {
-              icon: <XCircle className="text-red-500" />,
-            });
-            break;
-          default:
-            toast("Status updated");
-        }
+        showToast(action);
       } else {
         toast.warning("Action Failed...");
       }
@@ -293,6 +297,29 @@ export function Applicants({ applicants }: { applicants?: ApplicantProps[] }) {
     },
   });
 
+  const handleBulkAction = async (action: Status) => {
+    const selectedRows = table.getSelectedRowModel().rows.map((row) => row.original);
+    try {
+      await Promise.all(
+        selectedRows.map((applicant) =>
+          fetchInstance(
+            `admin/account/updatestatus/${applicant.app_id}?request=${action}`, 
+            { method: "PUT" }
+          ).then((res) => {
+            if (res.application_id === applicant.app_id) {
+              updateApplicationStatus(applicant.app_id, action);
+            }
+          })
+        )
+      );
+      showToast(action, `${selectedRows.length}`)
+      setRowSelection({});
+    } catch (error) {
+      toast.error("An error occurred while performing bulk action");
+    }
+  };
+  
+
   const globalFilter = table.getState().globalFilter;
 
   return (
@@ -304,6 +331,29 @@ export function Applicants({ applicants }: { applicants?: ApplicantProps[] }) {
           onChange={(event) => table.setGlobalFilter(event.target.value)}
           className="max-w-sm"
         />
+        <div className="flex items-center py-4 space-x-2 mx-4">
+          <Button
+            variant="success"
+            disabled={Object.keys(rowSelection).length === 0}
+            onClick={() => handleBulkAction(Status.ACCEPTED)}
+          >
+            Accept Selected
+          </Button>
+          <Button
+            variant="destructive"
+            disabled={Object.keys(rowSelection).length === 0}
+            onClick={() => handleBulkAction(Status.REJECTED)}
+          >
+            Reject Selected
+          </Button>
+          <Button
+            variant="default"
+            disabled={Object.keys(rowSelection).length === 0}
+            onClick={() => handleBulkAction(Status.WAITLISTED)}
+          >
+            Waitlist Selected
+          </Button>
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">
