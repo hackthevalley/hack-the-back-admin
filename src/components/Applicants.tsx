@@ -12,7 +12,7 @@ import {
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react";
+import { ArrowUpDown, ChevronDown, MoreHorizontal, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -34,15 +34,67 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import fetchInstance from "@/utils/api";
+import { toast } from "sonner";
+
+enum Status {
+  ACCOUNT_INACTIVE = "ACCOUNT_INACTIVE",
+  NOT_APPLIED = "NOT_APPLIED",
+  APPLYING = "APPLYING",
+  APPLIED = "APPLIED",
+  UNDER_REVIEW = "UNDER_REVIEW",
+  WAITLISTED = "WAITLISTED",
+  ACCEPTED = "ACCEPTED",
+  REJECTED = "REJECTED",
+  ACCEPTED_INVITE = "ACCEPTED_INVITE",
+  REJECTED_INVITE = "REJECTED_INVITE",
+  SCANNED_IN = "SCANNED_IN",
+}
 
 export interface ApplicantProps {
   first_name: string;
   last_name: string;
   email: string;
   status: string;
+  app_id: string;
   created_at: string;
   updated_at: string;
 }
+
+const handleApplicantAction = async (action: string, app_id: string) => {
+  try {
+    const res = await fetchInstance(
+      `admin/account/updatestatus/${app_id}?request=${action}`,
+      { method: "PUT" }
+    );
+
+    if (res.application_id == app_id) {
+      switch (action) {
+        case Status.ACCEPTED:
+          toast.success("Applicant accepted", {
+            icon: <CheckCircle className="text-green-500" />,
+          });
+          break;
+        case Status.WAITLISTED:
+          toast("Applicant waitlisted", {
+            icon: <AlertTriangle className="text-yellow-500" />,
+          });
+          break;
+        case Status.REJECTED:
+          toast.error("Applicant rejected", {
+            icon: <XCircle className="text-red-500" />,
+          });
+          break;
+        default:
+          toast("Status updated");
+      }
+    } else {
+      toast.warning("Action Failed...");
+    }
+  } catch (error) {
+    toast.error("An error occurred while trying update status of applicant...");
+  }
+};
 
 export const columns: ColumnDef<ApplicantProps>[] = [
   {
@@ -173,9 +225,21 @@ export const columns: ColumnDef<ApplicantProps>[] = [
             <DropdownMenuSeparator />
             <DropdownMenuItem>View Applicant</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Accept Applicant</DropdownMenuItem>
-            <DropdownMenuItem>Waitlist Applicant</DropdownMenuItem>
-            <DropdownMenuItem>Reject Applicant</DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => handleApplicantAction(Status.ACCEPTED, applicant.app_id)}
+            >
+              Accept Applicant
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => handleApplicantAction(Status.WAITLISTED, applicant.app_id)}
+            >
+              Waitlist Applicant
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => handleApplicantAction(Status.REJECTED, applicant.app_id)}
+            >
+              Reject Applicant
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
