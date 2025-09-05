@@ -5,6 +5,7 @@ import Home from "./pages/Home.tsx";
 import Login from "./pages/Login.tsx";
 import { AuthProvider } from "./utils/auth.tsx";
 import Apps from "./pages/Apps.tsx";
+import { Toaster } from "./components/ui/sonner.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
@@ -14,6 +15,7 @@ createRoot(document.getElementById("root")!).render(
         <Route path="/login" element={<Login />} />
         <Route path="/apps" element={<Apps />} />
       </Routes>
+      <Toaster position="top-right" richColors />
     </AuthProvider>
   </BrowserRouter>
 );

@@ -23,6 +23,7 @@ function Apps() {
           last_name: app.last_name,
           email: app.email ?? "",
           status: app.status ?? "unknown",
+          app_id: app.app_id ?? "unknown",
           created_at: app.created_at ?? "unknown",
           updated_at: app.updated_at ?? "unknown",
         }))
