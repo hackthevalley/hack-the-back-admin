@@ -12,7 +12,14 @@ import {
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, MoreHorizontal, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
+import {
+  ArrowUpDown,
+  ChevronDown,
+  MoreHorizontal,
+  CheckCircle,
+  AlertTriangle,
+  XCircle,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -81,13 +88,17 @@ export function Applicants({ applicants }: { applicants?: ApplicantProps[] }) {
     setData((previousData) =>
       previousData.map((applicant) =>
         applicant.app_id === id
-          ? {...applicant, status: newStatus, updated_at: new Date().toISOString()}
+          ? {
+              ...applicant,
+              status: newStatus,
+              updated_at: new Date().toISOString(),
+            }
           : applicant
       )
     );
   };
-  
-  const showToast = (action: Status, msg?: string, ) => {
+
+  const showToast = (action: Status, msg?: string) => {
     switch (action) {
       case Status.ACCEPTED:
         toast.success(`${msg} Applicant(s) accepted`, {
@@ -107,7 +118,7 @@ export function Applicants({ applicants }: { applicants?: ApplicantProps[] }) {
       default:
         toast("Status updated");
     }
-  }
+  };
 
   const handleApplicantAction = async (action: Status, app_id: string) => {
     try {
@@ -115,15 +126,17 @@ export function Applicants({ applicants }: { applicants?: ApplicantProps[] }) {
         `admin/account/updatestatus/${app_id}?request=${action}`,
         { method: "PUT" }
       );
-  
+
       if (res.application_id == app_id) {
         updateApplicationStatus(app_id, action);
         showToast(action);
       } else {
         toast.warning("Action Failed...");
       }
-    } catch (error) {
-      toast.error("An error occurred while trying update status of applicant...");
+    } catch {
+      toast.error(
+        "An error occurred while trying update status of applicant..."
+      );
     }
   };
 
@@ -195,7 +208,9 @@ export function Applicants({ applicants }: { applicants?: ApplicantProps[] }) {
           </Button>
         );
       },
-      cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
+      cell: ({ row }) => (
+        <div className="lowercase">{row.getValue("email")}</div>
+      ),
     },
     {
       accessorKey: "status",
@@ -257,17 +272,23 @@ export function Applicants({ applicants }: { applicants?: ApplicantProps[] }) {
               <DropdownMenuItem>View Applicant</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={() => handleApplicantAction(Status.ACCEPTED, applicant.app_id)}
+                onClick={() =>
+                  handleApplicantAction(Status.ACCEPTED, applicant.app_id)
+                }
               >
                 Accept Applicant
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => handleApplicantAction(Status.WAITLISTED, applicant.app_id)}
+                onClick={() =>
+                  handleApplicantAction(Status.WAITLISTED, applicant.app_id)
+                }
               >
                 Waitlist Applicant
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => handleApplicantAction(Status.REJECTED, applicant.app_id)}
+                onClick={() =>
+                  handleApplicantAction(Status.REJECTED, applicant.app_id)
+                }
               >
                 Reject Applicant
               </DropdownMenuItem>
@@ -298,12 +319,14 @@ export function Applicants({ applicants }: { applicants?: ApplicantProps[] }) {
   });
 
   const handleBulkAction = async (action: Status) => {
-    const selectedRows = table.getSelectedRowModel().rows.map((row) => row.original);
+    const selectedRows = table
+      .getSelectedRowModel()
+      .rows.map((row) => row.original);
     try {
       await Promise.all(
         selectedRows.map((applicant) =>
           fetchInstance(
-            `admin/account/updatestatus/${applicant.app_id}?request=${action}`, 
+            `admin/account/updatestatus/${applicant.app_id}?request=${action}`,
             { method: "PUT" }
           ).then((res) => {
             if (res.application_id === applicant.app_id) {
@@ -312,13 +335,12 @@ export function Applicants({ applicants }: { applicants?: ApplicantProps[] }) {
           })
         )
       );
-      showToast(action, `${selectedRows.length}`)
+      showToast(action, `${selectedRows.length}`);
       setRowSelection({});
-    } catch (error) {
+    } catch {
       toast.error("An error occurred while performing bulk action");
     }
   };
-  
 
   const globalFilter = table.getState().globalFilter;
 
