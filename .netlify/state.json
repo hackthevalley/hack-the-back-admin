@@ -1,0 +1,20 @@
+{
+	"geolocation": {
+		"data": {
+			"city": "Markham",
+			"country": {
+				"code": "CA",
+				"name": "Canada"
+			},
+			"subdivision": {
+				"code": "ON",
+				"name": "Ontario"
+			},
+			"timezone": "America/Toronto",
+			"latitude": 43.8978,
+			"longitude": -79.2617,
+			"postalCode": "L6E"
+		},
+		"timestamp": 1757288905624
+	}
+}
