@@ -6,7 +6,6 @@ import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   SortingState,
   useReactTable,
@@ -68,7 +67,19 @@ export interface ApplicantProps {
   updated_at: string;
 }
 
-export function Applicants({ applicants }: { applicants?: ApplicantProps[] }) {
+export function Applicants({
+  applicants,
+  setOffset,
+  offset,
+  search,
+  setSearch,
+}: {
+  applicants?: ApplicantProps[];
+  setOffset: React.Dispatch<React.SetStateAction<number>>;
+  offset: number;
+  search: string;
+  setSearch: React.Dispatch<React.SetStateAction<string>>;
+}) {
   const [data, setData] = React.useState(applicants ?? []);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -77,6 +88,7 @@ export function Applicants({ applicants }: { applicants?: ApplicantProps[] }) {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+  const [searchInput, setSearchInput] = React.useState(search);
 
   React.useEffect(() => {
     if (applicants) {
@@ -305,7 +317,6 @@ export function Applicants({ applicants }: { applicants?: ApplicantProps[] }) {
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
@@ -342,18 +353,19 @@ export function Applicants({ applicants }: { applicants?: ApplicantProps[] }) {
     }
   };
 
-  const globalFilter = table.getState().globalFilter;
-
   return (
     <div className="w-full py-4 px-6">
       <div className="flex items-center py-4">
         <Input
           placeholder="Search"
-          value={globalFilter ?? ""}
-          onChange={(event) => table.setGlobalFilter(event.target.value)}
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
           className="max-w-sm"
         />
         <div className="flex items-center py-4 space-x-2 mx-4">
+          <Button variant="default" onClick={() => setSearch(searchInput)}>
+            Search
+          </Button>
           <Button
             variant="success"
             disabled={Object.keys(rowSelection).length === 0}
@@ -462,16 +474,16 @@ export function Applicants({ applicants }: { applicants?: ApplicantProps[] }) {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
+            onClick={() => setOffset((prev) => Math.max(0, prev - 25))}
+            disabled={offset === 0}
           >
             Previous
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
+            onClick={() => setOffset((prev) => prev + 25)}
+            disabled={data.length < 25}
           >
             Next
           </Button>
