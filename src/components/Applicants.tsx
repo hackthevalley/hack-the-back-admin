@@ -88,6 +88,7 @@ export function Applicants({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+  const [searchInput, setSearchInput] = React.useState(search);
 
   React.useEffect(() => {
     if (applicants) {
@@ -357,11 +358,14 @@ export function Applicants({
       <div className="flex items-center py-4">
         <Input
           placeholder="Search"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
           className="max-w-sm"
         />
         <div className="flex items-center py-4 space-x-2 mx-4">
+          <Button variant="default" onClick={() => setSearch(searchInput)}>
+            Search
+          </Button>
           <Button
             variant="success"
             disabled={Object.keys(rowSelection).length === 0}

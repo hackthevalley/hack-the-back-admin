@@ -21,7 +21,7 @@ function Apps() {
     try {
       const data = await fetchInstance(
         `admin/account/getallapps?ofs=${ofs}&limit=${limit}${
-          query ? `&q=${query}` : ""
+          query ? `&search=${query}` : ""
         }`,
         { method: "GET" }
       );
