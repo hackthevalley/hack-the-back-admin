@@ -68,7 +68,15 @@ export interface ApplicantProps {
   updated_at: string;
 }
 
-export function Applicants({ applicants }: { applicants?: ApplicantProps[] }) {
+export function Applicants({
+  applicants,
+  setOffset,
+  offset,
+}: {
+  applicants?: ApplicantProps[];
+  setOffset: React.Dispatch<React.SetStateAction<number>>;
+  offset: number;
+}) {
   const [data, setData] = React.useState(applicants ?? []);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -305,7 +313,6 @@ export function Applicants({ applicants }: { applicants?: ApplicantProps[] }) {
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
@@ -462,16 +469,16 @@ export function Applicants({ applicants }: { applicants?: ApplicantProps[] }) {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
+            onClick={() => setOffset((prev) => Math.max(0, prev - 25))}
+            disabled={offset === 0}
           >
             Previous
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
+            onClick={() => setOffset((prev) => prev + 25)}
+            disabled={data.length < 25} // disable if fewer than pageSize rows returned
           >
             Next
           </Button>

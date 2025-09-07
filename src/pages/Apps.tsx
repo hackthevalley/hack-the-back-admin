@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useContext, useEffect, useState } from "react";
 import { UserContext } from "@/utils/auth";
 import { useNavigate } from "react-router";
@@ -8,9 +9,13 @@ import fetchInstance from "@/utils/api";
 function Apps() {
   const { isAuthenticated } = useContext(UserContext) ?? {};
   const [applicants, setApplicants] = useState<ApplicantProps[]>([]);
+  const [offset, setOffset] = useState(0);
   const navigate = useNavigate();
 
-  const getAllApps = async (ofs = 0, limit = 15): Promise<ApplicantProps[]> => {
+  const getAllApps = async (
+    ofs = offset,
+    limit = 25
+  ): Promise<ApplicantProps[]> => {
     try {
       const data = await fetchInstance(
         `admin/account/getallapps?ofs=${ofs}&limit=${limit}`,
@@ -40,13 +45,19 @@ function Apps() {
     if (!isAuthenticated) {
       navigate("/login");
     }
-    getAllApps().catch((err) => console.log(err.message));
   }, [isAuthenticated, navigate]);
+  useEffect(() => {
+    getAllApps().catch((err) => console.log(err.message));
+  }, [offset]);
 
   return (
     <div className="flex h-screen">
       <NavMenu />
-      <Applicants applicants={applicants} />
+      <Applicants
+        applicants={applicants}
+        setOffset={setOffset}
+        offset={offset}
+      />
     </div>
   );
 }
