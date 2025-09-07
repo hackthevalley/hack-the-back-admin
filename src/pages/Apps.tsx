@@ -10,6 +10,7 @@ function Apps() {
   const { isAuthenticated } = useContext(UserContext) ?? {};
   const [applicants, setApplicants] = useState<ApplicantProps[]>([]);
   const [offset, setOffset] = useState(0);
+  const [search, setSearch] = useState("");
   const navigate = useNavigate();
 
   const getAllApps = async (

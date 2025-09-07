@@ -477,7 +477,7 @@ export function Applicants({
             variant="outline"
             size="sm"
             onClick={() => setOffset((prev) => prev + 25)}
-            disabled={data.length < 25} // disable if fewer than pageSize rows returned
+            disabled={data.length < 25}
           >
             Next
           </Button>
