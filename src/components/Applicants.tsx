@@ -71,10 +71,14 @@ export function Applicants({
   applicants,
   setOffset,
   offset,
+  search,
+  setSearch,
 }: {
   applicants?: ApplicantProps[];
   setOffset: React.Dispatch<React.SetStateAction<number>>;
   offset: number;
+  search: string;
+  setSearch: React.Dispatch<React.SetStateAction<string>>;
 }) {
   const [data, setData] = React.useState(applicants ?? []);
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -355,8 +359,8 @@ export function Applicants({
       <div className="flex items-center py-4">
         <Input
           placeholder="Search"
-          value={globalFilter ?? ""}
-          onChange={(event) => table.setGlobalFilter(event.target.value)}
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
           className="max-w-sm"
         />
         <div className="flex items-center py-4 space-x-2 mx-4">

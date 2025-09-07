@@ -15,14 +15,16 @@ function Apps() {
 
   const getAllApps = async (
     ofs = offset,
-    limit = 25
+    limit = 25,
+    query = search
   ): Promise<ApplicantProps[]> => {
     try {
       const data = await fetchInstance(
-        `admin/account/getallapps?ofs=${ofs}&limit=${limit}`,
+        `admin/account/getallapps?ofs=${ofs}&limit=${limit}${
+          query ? `&q=${query}` : ""
+        }`,
         { method: "GET" }
       );
-      console.log(data.application);
       setApplicants(
         data.application.map((app: any) => ({
           first_name: app.first_name,
@@ -34,22 +36,21 @@ function Apps() {
           updated_at: app.updated_at ?? "unknown",
         }))
       );
-      console.log(applicants);
       return applicants;
     } catch (error) {
       console.error("Error fetching applicants:", error);
       throw error;
     }
   };
+  useEffect(() => {
+    getAllApps(offset, 25, search).catch((err) => console.log(err.message));
+  }, [offset, search]);
 
   useEffect(() => {
     if (!isAuthenticated) {
       navigate("/login");
     }
   }, [isAuthenticated, navigate]);
-  useEffect(() => {
-    getAllApps().catch((err) => console.log(err.message));
-  }, [offset]);
 
   return (
     <div className="flex h-screen">
@@ -58,6 +59,8 @@ function Apps() {
         applicants={applicants}
         setOffset={setOffset}
         offset={offset}
+        search={search}
+        setSearch={setSearch}
       />
     </div>
   );
