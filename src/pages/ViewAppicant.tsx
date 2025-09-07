@@ -24,7 +24,7 @@ interface FormAnswerfile {
 }
 
 interface Applicant {
-  application: Record<string, any>;
+  application: Record<string, unknown>;
   form_answers: FormAnswer[];
   form_answersfile: FormAnswerfile;
 }
@@ -86,12 +86,10 @@ export default function ViewApplicant() {
   }, []);
 
   useEffect(() => {
-    fetchInstance(`admin/account/file/${app_id}`, {
-      method: "GET",
-    })
-      .then(async (res) => {
-        if (!res.ok) throw new Error("Failed to fetch resume");
-        const blob = await res.blob();
+    if (!app_id) return;
+
+    fetchInstance(`admin/account/file/${app_id}`, { method: "GET" }, "blob")
+      .then((blob) => {
         const url = URL.createObjectURL(blob);
         setResumeUrl(url);
       })

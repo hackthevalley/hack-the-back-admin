@@ -7,7 +7,11 @@ interface FetchOptions {
   signal?: AbortSignal;
 }
 
-const fetchInstance = async (endpoint: string, options: FetchOptions = {}) => {
+const fetchInstance = async (
+  endpoint: string,
+  options: FetchOptions = {},
+  responseType: "json" | "blob" = "json"
+) => {
   const token = localStorage.getItem("auth-token");
   const headers = {
     Accept: "application/json",
@@ -20,19 +24,20 @@ const fetchInstance = async (endpoint: string, options: FetchOptions = {}) => {
     headers: { ...headers, ...options.headers },
   };
 
-  try {
-    const response = await fetch(`${API_BASE_URL}/${endpoint}`, config);
+  const response = await fetch(`${API_BASE_URL}/${endpoint}`, config);
 
-    if (!response.ok) {
+  if (!response.ok) {
+    if (responseType === "json") {
       const errorData = await response.json();
       throw new Error(errorData.message || "Something went wrong");
+    } else {
+      throw new Error("Failed to fetch file");
     }
-
-    return await response.json();
-  } catch (error) {
-    console.error("Fetch Client Error:", error);
-    throw error;
   }
+
+  return responseType === "json"
+    ? await response.json()
+    : await response.blob();
 };
 
 export default fetchInstance;
