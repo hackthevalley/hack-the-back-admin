@@ -28,7 +28,7 @@ function Apps() {
           updated_at: app.updated_at ?? "unknown",
         }))
       );
-      console.log(applicants);
+      console.log("applicant" + applicants);
       return applicants;
     } catch (error) {
       console.error("Error fetching applicants:", error);
