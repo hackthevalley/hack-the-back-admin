@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/table";
 import fetchInstance from "@/utils/api";
 import { toast } from "sonner";
+import { useNavigate } from "react-router";
 
 enum Status {
   ACCOUNT_INACTIVE = "ACCOUNT_INACTIVE",
@@ -270,6 +271,8 @@ export function Applicants({
       enableHiding: false,
       cell: ({ row }) => {
         const applicant = row.original;
+        const navigate = useNavigate();
+        console.log(applicant);
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -281,7 +284,11 @@ export function Applicants({
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>View Applicant</DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => navigate(`/apps/${applicant.app_id}`)}
+              >
+                View Applicant
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() =>
