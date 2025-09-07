@@ -352,8 +352,6 @@ export function Applicants({
     }
   };
 
-  const globalFilter = table.getState().globalFilter;
-
   return (
     <div className="w-full py-4 px-6">
       <div className="flex items-center py-4">
