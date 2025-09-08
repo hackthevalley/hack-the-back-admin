@@ -284,10 +284,14 @@ export function Applicants({
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => navigate(`/apps/${applicant.app_id}`)}
-              >
-                View Applicant
+              <DropdownMenuItem asChild>
+                <a
+                  href={`/apps/${applicant.app_id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View Applicant
+                </a>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem

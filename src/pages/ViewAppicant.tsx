@@ -141,7 +141,11 @@ export default function ViewApplicant() {
         );
       })()}
 
-      <Accordion.Root type="multiple" className="space-y-2">
+      <Accordion.Root
+        type="multiple"
+        defaultValue={SECTIONS.filter((s) => s !== "Profile" && s !== "Resume")}
+        className="space-y-2"
+      >
         {SECTIONS.filter((s) => s !== "Profile" && s !== "Resume").map(
           (sectionName) => {
             const [start, end] = SECTION_RANGES[sectionName];
