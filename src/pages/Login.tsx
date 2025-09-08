@@ -5,21 +5,25 @@ import { useState, useContext, useEffect } from "react";
 import fetchInstance from "@/utils/api";
 import { useNavigate } from "react-router";
 import { UserContext } from "@/utils/auth";
+import { toast } from "sonner";
 
 function Login() {
   const [formData, setFormData] = useState({ username: "", password: "" });
   const navigate = useNavigate();
   const { login, isAuthenticated } = useContext(UserContext) ?? {};
+
   useEffect(() => {
     if (isAuthenticated) {
       navigate("/");
     }
   }, [isAuthenticated, navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const urlEncodedData = new URLSearchParams();
     urlEncodedData.append("username", formData.username);
     urlEncodedData.append("password", formData.password);
+
     try {
       const response = await fetchInstance("account/login", {
         method: "POST",
@@ -28,20 +32,25 @@ function Login() {
         },
         body: urlEncodedData.toString(),
       });
+
       if (response.access_token && login) {
         await login(response.access_token);
         navigate("/");
+      } else {
+        toast.error("Invalid credentials. Please try again.");
       }
-    } catch (err) {
-      console.log(err);
+    } catch (err: any) {
+      toast.error(err?.message || "Something went wrong while logging in.");
     }
   };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
+
   return (
     <div className="flex justify-center items-center h-screen">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4  w-1/4">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-1/4">
         <h1 className="font-semibold text-lg">
           Sign in to view admin dashboard
         </h1>
@@ -53,7 +62,7 @@ function Login() {
           placeholder="Email"
           onChange={handleChange}
         />
-        <Label htmlFor="email">Password</Label>
+        <Label htmlFor="password">Password</Label>
         <Input
           type="password"
           id="password"

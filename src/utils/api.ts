@@ -27,12 +27,20 @@ const fetchInstance = async (
   const response = await fetch(`${API_BASE_URL}/${endpoint}`, config);
 
   if (!response.ok) {
-    if (responseType === "json") {
+    let errorMessage = "Something went wrong";
+
+    try {
       const errorData = await response.json();
-      throw new Error(errorData.message || "Something went wrong");
-    } else {
-      throw new Error("Failed to fetch file");
+      errorMessage =
+        errorData.message ||
+        errorData.detail || // FastAPI/Django often use "detail"
+        JSON.stringify(errorData);
+    } catch {
+      // fallback if not JSON
+      errorMessage = await response.text();
     }
+
+    throw new Error(errorMessage);
   }
 
   return responseType === "json"

@@ -17,7 +17,7 @@ createRoot(document.getElementById("root")!).render(
         <Route path="/apps" element={<Apps />} />
         <Route path="/apps/:app_id" element={<ViewApplicant />} />
       </Routes>
-      <Toaster position="top-right" richColors />
+      <Toaster position="bottom-right" richColors />
     </AuthProvider>
   </BrowserRouter>
 );
