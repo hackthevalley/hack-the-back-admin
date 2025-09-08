@@ -369,6 +369,11 @@ export function Applicants({
           placeholder="Search"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              setSearch(searchInput);
+            }
+          }}
           className="max-w-sm"
         />
         <div className="flex items-center py-4 space-x-2 mx-4">
