@@ -21,7 +21,7 @@ function NavMenu() {
   return (
     <>
       {/* Mobile */}
-      <div className="p-2 lg:hidden">
+      <div className="p-1 lg:hidden">
         <Sheet>
           <SheetTrigger asChild>
             <Button
@@ -84,7 +84,8 @@ function NavMenu() {
       </div>
 
       {/* Desktop */}
-      <div className="hidden lg:flex flex-col min-w-16 w-1/5 max-w-[16rem] border gap-4 justify-between p-4">
+      {/* w-1/5 */}
+      <div className="hidden lg:flex flex-col min-w-48 max-w-[16rem] gap-4 justify-between p-4">
         <div className="flex flex-col gap-2">
           <h1 className="font-semibold text-md p-2">Hack The Back</h1>
           <Button

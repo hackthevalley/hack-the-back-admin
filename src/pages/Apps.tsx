@@ -53,7 +53,7 @@ function Apps() {
   }, [isAuthenticated, navigate]);
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen w-full">
       <NavMenu />
       <Applicants
         applicants={applicants}
