@@ -92,9 +92,41 @@ export function Applicants({
 
   React.useEffect(() => {
     if (applicants) {
+      applicants.forEach((applicant) => {
+        applicant.created_at = convertToDateTime(applicant.created_at);
+        applicant.updated_at = convertToDateTime(applicant.updated_at);
+      });
       setData(applicants);
     }
   }, [applicants]);
+
+  function convertToDateTime(input: string): string {
+    const d = new Date(input);
+
+    const parts = new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "America/Toronto",
+      timeZoneName: "short",
+    }).formatToParts(d);
+
+    const get = (type: Intl.DateTimeFormatPartTypes) =>
+      parts.find((p) => p.type === type)?.value ?? "";
+
+    const month = get("month");
+    const day = get("day");
+    const year = get("year");
+    const hour = get("hour");
+    const minute = get("minute");
+    const dayPeriod = get("dayPeriod");
+    const tzName = get("timeZoneName");
+
+    return `${month} ${day}, ${year} - ${hour}:${minute}${dayPeriod} ${tzName}`;
+  }
 
   const updateApplicationStatus = (id: string, newStatus: Status) => {
     setData((previousData) =>
@@ -164,6 +196,7 @@ export function Applicants({
           onCheckedChange={(value: boolean) =>
             table.toggleAllPageRowsSelected(!!value)
           }
+          className="border-primary"
           aria-label="Select all"
         />
       ),
@@ -171,6 +204,7 @@ export function Applicants({
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value: boolean) => row.toggleSelected(!!value)}
+          className="border-primary"
           aria-label="Select row"
         />
       ),
@@ -244,9 +278,7 @@ export function Applicants({
           </Button>
         );
       },
-      cell: ({ row }) => (
-        <div className="lowercase">{row.getValue("created_at")}</div>
-      ),
+      cell: ({ row }) => <div className="">{row.getValue("created_at")}</div>,
     },
     {
       accessorKey: "updated_at",
@@ -261,9 +293,7 @@ export function Applicants({
           </Button>
         );
       },
-      cell: ({ row }) => (
-        <div className="lowercase">{row.getValue("updated_at")}</div>
-      ),
+      cell: ({ row }) => <div className="">{row.getValue("updated_at")}</div>,
     },
     {
       id: "actions",
