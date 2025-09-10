@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { UserContext } from "@/utils/auth";
 import { Button } from "./ui/button";
 import { House, Newspaper, LogOut, Menu } from "lucide-react";
