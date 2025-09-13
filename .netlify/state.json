@@ -1,7 +1,7 @@
 {
 	"geolocation": {
 		"data": {
-			"city": "Markham",
+			"city": "Waterloo",
 			"country": {
 				"code": "CA",
 				"name": "Canada"
@@ -11,10 +11,10 @@
 				"name": "Ontario"
 			},
 			"timezone": "America/Toronto",
-			"latitude": 43.8978,
-			"longitude": -79.2617,
-			"postalCode": "L6E"
+			"latitude": 43.474,
+			"longitude": -80.554,
+			"postalCode": "N2L"
 		},
-		"timestamp": 1757288905624
+		"timestamp": 1757805998778
 	}
 }
