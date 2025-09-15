@@ -1,5 +1,5 @@
 "use client";
-import * as React from "react";
+import { useState, useEffect, Dispatch, SetStateAction } from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/table";
 import fetchInstance from "@/utils/api";
 import { toast } from "sonner";
+import AgeRangeSlider from "@/components/AgeRangeSlider";
 
 enum Status {
   ACCOUNT_INACTIVE = "ACCOUNT_INACTIVE",
@@ -65,6 +66,8 @@ export interface ApplicantProps {
   app_id: string;
   created_at: string;
   updated_at: string;
+  age?: string;
+  gender?: string;
 }
 
 export function Applicants({
@@ -73,24 +76,43 @@ export function Applicants({
   offset,
   search,
   setSearch,
+  age,
+  setAge,
+  gender,
+  setGender,
 }: {
   applicants?: ApplicantProps[];
-  setOffset: React.Dispatch<React.SetStateAction<number>>;
+  setOffset: Dispatch<SetStateAction<number>>;
   offset: number;
   search: string;
-  setSearch: React.Dispatch<React.SetStateAction<string>>;
+  setSearch: Dispatch<SetStateAction<string>>;
+  age: string;
+  setAge: Dispatch<SetStateAction<string>>;
+  gender: string;
+  setGender: Dispatch<SetStateAction<string>>;
 }) {
-  const [data, setData] = React.useState(applicants ?? []);
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = React.useState({});
-  const [searchInput, setSearchInput] = React.useState(search);
+  const [data, setData] = useState(applicants ?? []);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = useState({});
+  const [searchInput, setSearchInput] = useState(search);
+  const AGE_MIN = 13;
+  const AGE_MAX = 40;
+  const [ageRange, setAgeRange] = useState<[number, number]>([
+    AGE_MIN,
+    AGE_MAX,
+  ]);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const genderOptions = [
+    "Male",
+    "Female",
+    "Non-binary",
+    "Other",
+    "Prefer not to say",
+  ];
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (applicants) {
       applicants.forEach((applicant) => {
         applicant.created_at = convertToDateTime(applicant.created_at);
@@ -99,6 +121,25 @@ export function Applicants({
       setData(applicants);
     }
   }, [applicants]);
+
+  useEffect(() => {
+    if (age && age.includes("-")) {
+      const [min, max] = age.split("-").map(Number);
+      setAgeRange([min, max]);
+    } else if (!age) {
+      setAgeRange([AGE_MIN, AGE_MAX]);
+    }
+  }, [age]);
+
+  const handleAgeRangeChange = (newRange: [number, number]) => {
+    setAgeRange(newRange);
+    if (newRange[0] !== AGE_MIN || newRange[1] !== AGE_MAX) {
+      const newAgeFilter = `${newRange[0]}-${newRange[1]}`;
+      setAge(newAgeFilter);
+    } else {
+      setAge("");
+    }
+  };
 
   function convertToDateTime(input: string): string {
     const d = new Date(input);
@@ -259,6 +300,38 @@ export function Applicants({
       ),
     },
     {
+      accessorKey: "age",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Age
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div className="">{row.getValue("age") || "N/A"}</div>,
+    },
+    {
+      accessorKey: "gender",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Gender
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => (
+        <div className="capitalize">{row.getValue("gender") || "N/A"}</div>
+      ),
+    },
+    {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => (
@@ -300,7 +373,6 @@ export function Applicants({
       enableHiding: false,
       cell: ({ row }) => {
         const applicant = row.original;
-        console.log(applicant);
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -404,11 +476,23 @@ export function Applicants({
               setSearch(searchInput);
             }
           }}
-          className="max-w-sm"
+          className="max-w-md"
         />
+
         <div className="flex items-center py-4 space-x-2 mx-4">
-          <Button variant="default" onClick={() => setSearch(searchInput)}>
+          <Button
+            variant="default"
+            onClick={() => {
+              setSearch(searchInput);
+            }}
+          >
             Search
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setShowAdvanced((prev) => !prev)}
+          >
+            {showAdvanced ? "Hide Advanced" : "Advanced Filters"}
           </Button>
           <Button
             variant="success"
@@ -459,6 +543,51 @@ export function Applicants({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+      {showAdvanced && (
+        <div className="flex items-center py-2 space-x-2">
+          <AgeRangeSlider
+            value={ageRange}
+            onValueChange={handleAgeRangeChange}
+            min={AGE_MIN}
+            max={AGE_MAX}
+            step={1}
+          />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="ml-2 min-w-[150px] justify-between"
+              >
+                {gender || "All Genders"}
+                <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-[150px]">
+              <DropdownMenuItem onClick={() => setGender("")}>
+                All Genders
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              {genderOptions.map((opt) => (
+                <DropdownMenuItem key={opt} onClick={() => setGender(opt)}>
+                  {opt}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setSearch("");
+              setSearchInput("");
+              setAge("");
+              setAgeRange([AGE_MIN, AGE_MAX]);
+              setGender("");
+            }}
+          >
+            Clear Filters
+          </Button>
+        </div>
+      )}
       <div className="overflow-hidden rounded-md border-1 border-black p-2">
         <Table>
           <TableHeader>
@@ -518,7 +647,12 @@ export function Applicants({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setOffset((prev) => Math.max(0, prev - 25))}
+            onClick={() =>
+              setOffset((prev) => {
+                const next = Math.max(0, prev - 25);
+                return next;
+              })
+            }
             disabled={offset === 0}
           >
             Previous
@@ -526,7 +660,12 @@ export function Applicants({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setOffset((prev) => prev + 25)}
+            onClick={() =>
+              setOffset((prev) => {
+                const next = prev + 25;
+                return next;
+              })
+            }
             disabled={data.length < 25}
           >
             Next

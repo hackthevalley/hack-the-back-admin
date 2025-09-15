@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @plugin 'tailwindcss-animate';
 
@@ -123,5 +123,41 @@
 @layer base {
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  @keyframes accordion-down {
+    from {
+      height: 0;
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      height: 0;
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+  }
+
+  .animate-accordion-down {
+    animation: accordion-down 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .animate-accordion-up {
+    animation: accordion-up 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }

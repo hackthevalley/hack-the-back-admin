@@ -96,7 +96,12 @@ export default function ViewApplicant() {
       .catch(() => setError("Failed to fetch resume"));
   }, [app_id]);
 
-  if (!applicant) return <p>{error}</p>;
+  if (!applicant)
+    return (
+      <div className="p-6 max-w-4xl mx-auto">
+        <p className="text-destructive text-center text-lg">{error}</p>
+      </div>
+    );
 
   const sections: Record<string, Question[]> = {};
   SECTIONS.forEach((s) => {
@@ -105,37 +110,52 @@ export default function ViewApplicant() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
-      <h1 className="text-3xl font-bold text-white">Applicant Details</h1>
+      <h1 className="text-3xl font-bold text-foreground">Applicant Details</h1>
 
       {/* PROFILE SECTION + RESUME*/}
       {(() => {
         const [start, end] = SECTION_RANGES["Profile"];
         const profileQuestions = questions.slice(start, end + 1);
         return (
-          <div className="bg-gray-800 p-4 rounded shadow space-y-2">
-            <ul className=" list-inside space-y-1">
+          <div className="bg-card p-4 rounded-lg shadow-md border border-border space-y-2">
+            <ul className="list-inside space-y-1 text-card-foreground">
               {profileQuestions.map((q) => {
                 const answerObj = applicant.form_answers.find(
                   (a) => a.question_id === q.question_id
                 );
                 return (
-                  <li key={q.question_id}>
-                    <strong>{q.label}:</strong>{" "}
-                    {answerObj ? answerObj.answer : "No answer"}
+                  <li key={q.question_id} className="text-sm">
+                    <strong className="text-foreground font-semibold">
+                      {q.label}:
+                    </strong>{" "}
+                    <span className="text-muted-foreground">
+                      {answerObj &&
+                      answerObj.answer &&
+                      answerObj.answer.trim() !== ""
+                        ? answerObj.answer
+                        : q.label.toLowerCase().includes("phone")
+                        ? "N/A"
+                        : "No answer"}
+                    </span>
                   </li>
                 );
               })}
             </ul>
             {resumeUrl ? (
-              <iframe
-                src={resumeUrl}
-                width="100%"
-                height="600px"
-                style={{ border: "none" }}
-                title="Resume Preview"
-              />
+              <div className="mt-4 rounded-lg overflow-hidden border border-border">
+                <iframe
+                  src={resumeUrl}
+                  width="100%"
+                  height="600px"
+                  style={{ border: "none" }}
+                  title="Resume Preview"
+                  className="bg-background"
+                />
+              </div>
             ) : (
-              <p>{error || "Loading resume..."}</p>
+              <p className="text-muted-foreground text-sm">
+                {error || "Loading resume..."}
+              </p>
             )}
           </div>
         );
@@ -156,23 +176,33 @@ export default function ViewApplicant() {
             return (
               <Accordion.Item key={sectionName} value={sectionName}>
                 <Accordion.Header>
-                  <Accordion.Trigger className="flex justify-between w-full p-4 bg-gray-700 rounded text-left">
-                    {sectionName}
-                    <ChevronDown className="w-5 h-5" />
+                  <Accordion.Trigger className="flex justify-between w-full p-4 bg-muted hover:bg-accent rounded-lg text-left transition-all duration-300 ease-in-out group">
+                    <span className="font-medium text-foreground">
+                      {sectionName}
+                    </span>
+                    <ChevronDown className="w-5 h-5 text-muted-foreground transition-transform duration-300 ease-in-out group-data-[state=open]:rotate-180" />
                   </Accordion.Trigger>
                 </Accordion.Header>
-                <Accordion.Content className="p-4 bg-gray-800 rounded-b">
-                  <ul className="list-disc list-inside space-y-1">
+                <Accordion.Content className="p-4 bg-muted/50 border border-border rounded-b-lg overflow-hidden data-[state=closed]:opacity-0 data-[state=open]:opacity-100 data-[state=closed]:translate-y-[-10px] data-[state=open]:translate-y-0 data-[state=closed]:max-h-0 data-[state=open]:max-h-[1000px] transition-all duration-500 ease-in-out">
+                  <ul className="list-disc list-inside space-y-1 text-card-foreground">
                     {sectionQuestions.map((q) => {
                       const answerObj = applicant.form_answers.find(
                         (a) => a.question_id === q.question_id
                       );
                       return (
-                        <li key={q.question_id}>
-                          <strong>{q.label}:</strong>{" "}
-                          {answerObj && answerObj.answer
-                            ? answerObj.answer
-                            : "N/A"}
+                        <li key={q.question_id} className="text-sm">
+                          <strong className="text-foreground font-semibold">
+                            {q.label}:
+                          </strong>{" "}
+                          <span className="text-muted-foreground">
+                            {answerObj &&
+                            answerObj.answer &&
+                            answerObj.answer.trim() !== ""
+                              ? answerObj.answer
+                              : q.label.toLowerCase().includes("phone")
+                              ? "N/A"
+                              : "N/A"}
+                          </span>
                         </li>
                       );
                     })}
