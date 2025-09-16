@@ -11,18 +11,29 @@ function Apps() {
   const [applicants, setApplicants] = useState<ApplicantProps[]>([]);
   const [offset, setOffset] = useState(0);
   const [search, setSearch] = useState("");
+  const [age, setAge] = useState("");
+  const [gender, setGender] = useState("");
   const navigate = useNavigate();
 
   const getAllApps = async (
     ofs = offset,
     limit = 25,
-    query = search
+    query = search,
+    ageFilter = age,
+    genderFilter = gender
   ): Promise<ApplicantProps[]> => {
     try {
+      const params = new URLSearchParams({
+        ofs: ofs.toString(),
+        limit: limit.toString(),
+      });
+
+      if (query) params.append("search", query);
+      if (ageFilter) params.append("age", ageFilter);
+      if (genderFilter) params.append("gender", genderFilter);
+
       const data = await fetchInstance(
-        `admin/account/getallapps?ofs=${ofs}&limit=${limit}${
-          query ? `&search=${query}` : ""
-        }`,
+        `admin/account/getallapps?${params.toString()}`,
         { method: "GET" }
       );
       setApplicants(
@@ -34,6 +45,8 @@ function Apps() {
           app_id: app.app_id ?? "unknown",
           created_at: app.created_at ?? "unknown",
           updated_at: app.updated_at ?? "unknown",
+          age: app.age ?? "unknown",
+          gender: app.gender ?? "unknown",
         }))
       );
       return applicants;
@@ -43,8 +56,10 @@ function Apps() {
     }
   };
   useEffect(() => {
-    getAllApps(offset, 25, search).catch((err) => console.log(err.message));
-  }, [offset, search]);
+    getAllApps(offset, 25, search, age, gender).catch((err) =>
+      console.log(err.message)
+    );
+  }, [offset, search, age, gender]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -53,7 +68,7 @@ function Apps() {
   }, [isAuthenticated, navigate]);
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen w-full">
       <NavMenu />
       <Applicants
         applicants={applicants}
@@ -61,6 +76,10 @@ function Apps() {
         offset={offset}
         search={search}
         setSearch={setSearch}
+        age={age}
+        setAge={setAge}
+        gender={gender}
+        setGender={setGender}
       />
     </div>
   );
