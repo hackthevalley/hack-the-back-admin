@@ -27,7 +27,6 @@ function Apps() {
     schoolFilter = utsc,
     dateSortFilter = dateSort,
     roleFilter = role
-    dateSortFilter = dateSort
   ): Promise<ApplicantProps[]> => {
     try {
       const params = new URLSearchParams({
