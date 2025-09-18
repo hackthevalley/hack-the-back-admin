@@ -114,6 +114,8 @@ export function Applicants({
   setUTSC,
   dateSort,
   setDateSort,
+  role,
+  setRole,
 }: {
   applicants?: ApplicantProps[];
   setOffset: Dispatch<SetStateAction<number>>;
@@ -128,6 +130,8 @@ export function Applicants({
   setUTSC: Dispatch<SetStateAction<string>>;
   dateSort: string;
   setDateSort: Dispatch<SetStateAction<string>>;
+  role: string;
+  setRole: Dispatch<SetStateAction<string>>;
 }) {
   const [data, setData] = useState(applicants ?? []);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -574,6 +578,32 @@ export function Applicants({
               <DropdownMenuItem onClick={() => setDateSort("latest")}>
                 Latest First
               </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {/* Role filter dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="min-w-[150px] justify-between"
+              >
+                {role ? role.replace(/_/g, " ") : "Filter by Status"}
+                <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-[200px]">
+              <DropdownMenuItem onClick={() => setRole("")}>
+                All Statuses
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              {Object.values(Status).map((statusValue) => (
+                <DropdownMenuItem
+                  key={statusValue}
+                  onClick={() => setRole(statusValue)}
+                >
+                  {statusValue.replace(/_/g, " ")}
+                </DropdownMenuItem>
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
