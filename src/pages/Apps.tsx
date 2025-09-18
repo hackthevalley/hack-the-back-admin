@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useContext, useEffect, useState } from "react";
-import { UserContext } from "@/utils/auth";
-import { useNavigate } from "react-router";
-import NavMenu from "@/components/Navmenu";
 import { Applicants, ApplicantProps } from "@/components/Applicants";
+import NavMenu from "@/components/Navmenu";
 import fetchInstance from "@/utils/api";
+import { UserContext } from "@/utils/auth";
+import { useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 
 function Apps() {
   const { isAuthenticated } = useContext(UserContext) ?? {};
@@ -13,6 +13,8 @@ function Apps() {
   const [search, setSearch] = useState("");
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
+  const [utsc, setUTSC] = useState("");
+  const [dateSort, setDateSort] = useState("");
   const navigate = useNavigate();
 
   const getAllApps = async (
@@ -20,7 +22,9 @@ function Apps() {
     limit = 25,
     query = search,
     ageFilter = age,
-    genderFilter = gender
+    genderFilter = gender,
+    schoolFilter = utsc,
+    dateSortFilter = dateSort
   ): Promise<ApplicantProps[]> => {
     try {
       const params = new URLSearchParams({
@@ -31,6 +35,8 @@ function Apps() {
       if (query) params.append("search", query);
       if (ageFilter) params.append("age", ageFilter);
       if (genderFilter) params.append("gender", genderFilter);
+      if (schoolFilter) params.append("school", schoolFilter);
+      if (dateSortFilter) params.append("date_sort", dateSortFilter);
 
       const data = await fetchInstance(
         `admin/account/getallapps?${params.toString()}`,
@@ -47,6 +53,7 @@ function Apps() {
           updated_at: app.updated_at ?? "unknown",
           age: app.age ?? "unknown",
           gender: app.gender ?? "unknown",
+          school: app.school ?? "unknown",
         }))
       );
       return applicants;
@@ -56,10 +63,10 @@ function Apps() {
     }
   };
   useEffect(() => {
-    getAllApps(offset, 25, search, age, gender).catch((err) =>
+    getAllApps(offset, 25, search, age, gender, utsc, dateSort).catch((err) =>
       console.log(err.message)
     );
-  }, [offset, search, age, gender]);
+  }, [offset, search, age, gender, utsc, dateSort]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -80,6 +87,10 @@ function Apps() {
         setAge={setAge}
         gender={gender}
         setGender={setGender}
+        utsc={utsc}
+        setUTSC={setUTSC}
+        dateSort={dateSort}
+        setDateSort={setDateSort}
       />
     </div>
   );

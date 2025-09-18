@@ -1,5 +1,33 @@
 "use client";
 import { useState, useEffect, Dispatch, SetStateAction } from "react";
+
+// Fix for Radix UI dropdown menu types
+declare module "@radix-ui/react-dropdown-menu" {
+  export interface DropdownMenuTriggerProps {
+    children?: React.ReactNode;
+    asChild?: boolean;
+  }
+  export interface DropdownMenuContentProps {
+    children?: React.ReactNode;
+    align?: "start" | "center" | "end";
+    className?: string;
+  }
+  export interface DropdownMenuItemProps {
+    children?: React.ReactNode;
+    asChild?: boolean;
+    onClick?: () => void;
+  }
+  export interface DropdownMenuLabelProps {
+    children?: React.ReactNode;
+  }
+  export interface DropdownMenuCheckboxItemProps {
+    children?: React.ReactNode;
+    checked?: boolean;
+    onCheckedChange?: (checked: boolean) => void;
+    className?: string;
+  }
+}
+
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -44,6 +72,7 @@ import fetchInstance from "@/utils/api";
 import { toast } from "sonner";
 import AgeRangeSlider from "@/components/AgeRangeSlider";
 
+
 enum Status {
   ACCOUNT_INACTIVE = "ACCOUNT_INACTIVE",
   NOT_APPLIED = "NOT_APPLIED",
@@ -68,6 +97,7 @@ export interface ApplicantProps {
   updated_at: string;
   age?: string;
   gender?: string;
+  school?: string;
 }
 
 export function Applicants({
@@ -80,6 +110,10 @@ export function Applicants({
   setAge,
   gender,
   setGender,
+  utsc,
+  setUTSC,
+  dateSort,
+  setDateSort,
 }: {
   applicants?: ApplicantProps[];
   setOffset: Dispatch<SetStateAction<number>>;
@@ -90,6 +124,10 @@ export function Applicants({
   setAge: Dispatch<SetStateAction<string>>;
   gender: string;
   setGender: Dispatch<SetStateAction<string>>;
+  utsc: string;
+  setUTSC: Dispatch<SetStateAction<string>>;
+  dateSort: string;
+  setDateSort: Dispatch<SetStateAction<string>>;
 }) {
   const [data, setData] = useState(applicants ?? []);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -332,6 +370,23 @@ export function Applicants({
       ),
     },
     {
+      accessorKey: "school",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            School
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => (
+        <div className="capitalize">{row.getValue("school") || "N/A"}</div>
+      ),
+    },
+    {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => (
@@ -417,7 +472,7 @@ export function Applicants({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        );
+        ) as any;
       },
     },
   ];
@@ -466,20 +521,19 @@ export function Applicants({
 
   return (
     <div className="w-full py-4 px-6">
-      <div className="flex items-center py-4">
-        <Input
-          placeholder="Search"
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              setSearch(searchInput);
-            }
-          }}
-          className="max-w-md"
-        />
-
-        <div className="flex items-center py-4 space-x-2 mx-4">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center py-4 gap-4">
+        <div className="flex items-center gap-4 flex-1">
+          <Input
+            placeholder="Search"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                setSearch(searchInput);
+              }
+            }}
+            className="max-w-md"
+          />
           <Button
             variant="default"
             onClick={() => {
@@ -494,6 +548,37 @@ export function Applicants({
           >
             {showAdvanced ? "Hide Advanced" : "Advanced Filters"}
           </Button>
+          {/* Date Sort dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="min-w-[150px] justify-between"
+              >
+                {dateSort === "oldest"
+                  ? "Oldest First"
+                  : dateSort === "latest"
+                  ? "Latest First"
+                  : "Sort by Date"}
+                <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-[150px]">
+              <DropdownMenuItem onClick={() => setDateSort("")}>
+                No Date Sort
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setDateSort("oldest")}>
+                Oldest First
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setDateSort("latest")}>
+                Latest First
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <div className="flex items-center space-x-2">
           <Button
             variant="success"
             disabled={Object.keys(rowSelection).length === 0}
@@ -516,9 +601,10 @@ export function Applicants({
             Waitlist Selected
           </Button>
         </div>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
+            <Button variant="outline">
               Columns <ChevronDown />
             </Button>
           </DropdownMenuTrigger>
@@ -532,7 +618,7 @@ export function Applicants({
                     key={column.id}
                     className="capitalize"
                     checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
+                    onCheckedChange={(value: boolean) =>
                       column.toggleVisibility(!!value)
                     }
                   >
@@ -552,6 +638,33 @@ export function Applicants({
             max={AGE_MAX}
             step={1}
           />
+          {/* UTSC dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="ml-2 min-w-[150px] justify-between"
+              >
+                {utsc == "University of Toronto (Scarborough)"
+                  ? "UTSC Only"
+                  : "All Schools"}
+                <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-[150px]">
+              <DropdownMenuItem onClick={() => setUTSC("")}>
+                All Schools
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => setUTSC("University of Toronto (Scarborough)")}
+              >
+                UTSC Only
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Gender dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -574,6 +687,7 @@ export function Applicants({
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+
           <Button
             variant="outline"
             onClick={() => {
@@ -582,6 +696,8 @@ export function Applicants({
               setAge("");
               setAgeRange([AGE_MIN, AGE_MAX]);
               setGender("");
+              setUTSC("");
+              setDateSort("");
             }}
           >
             Clear Filters
@@ -673,5 +789,5 @@ export function Applicants({
         </div>
       </div>
     </div>
-  );
+  ) as any;
 }
