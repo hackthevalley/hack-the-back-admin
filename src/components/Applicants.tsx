@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useState, useEffect, Dispatch, SetStateAction } from "react";
 
@@ -71,7 +72,6 @@ import {
 import fetchInstance from "@/utils/api";
 import { toast } from "sonner";
 import AgeRangeSlider from "@/components/AgeRangeSlider";
-
 
 enum Status {
   ACCOUNT_INACTIVE = "ACCOUNT_INACTIVE",
