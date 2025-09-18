@@ -15,6 +15,7 @@ function Apps() {
   const [gender, setGender] = useState("");
   const [utsc, setUTSC] = useState("");
   const [dateSort, setDateSort] = useState("");
+  const [role, setRole] = useState<string>("");
   const navigate = useNavigate();
 
   const getAllApps = async (
@@ -24,7 +25,8 @@ function Apps() {
     ageFilter = age,
     genderFilter = gender,
     schoolFilter = utsc,
-    dateSortFilter = dateSort
+    dateSortFilter = dateSort,
+    roleFilter = role
   ): Promise<ApplicantProps[]> => {
     try {
       const params = new URLSearchParams({
@@ -37,6 +39,7 @@ function Apps() {
       if (genderFilter) params.append("gender", genderFilter);
       if (schoolFilter) params.append("school", schoolFilter);
       if (dateSortFilter) params.append("date_sort", dateSortFilter);
+      if (roleFilter) params.append("role", roleFilter);
 
       const data = await fetchInstance(
         `admin/account/getallapps?${params.toString()}`,
@@ -54,8 +57,10 @@ function Apps() {
           age: app.age ?? "unknown",
           gender: app.gender ?? "unknown",
           school: app.school ?? "unknown",
+          role: app.role ?? "unknown",
         }))
       );
+      console.log(applicants);
       return applicants;
     } catch (error) {
       console.error("Error fetching applicants:", error);
@@ -66,7 +71,7 @@ function Apps() {
     getAllApps(offset, 25, search, age, gender, utsc, dateSort).catch((err) =>
       console.log(err.message)
     );
-  }, [offset, search, age, gender, utsc, dateSort]);
+  }, [offset, search, age, gender, utsc, dateSort, role]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -91,6 +96,8 @@ function Apps() {
         setUTSC={setUTSC}
         dateSort={dateSort}
         setDateSort={setDateSort}
+        role={role} // new
+        setRole={setRole} // new
       />
     </div>
   );
