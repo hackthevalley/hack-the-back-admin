@@ -1,7 +1,14 @@
 import { useContext } from "react";
 import { UserContext } from "@/utils/auth";
 import { Button } from "./ui/button";
-import { House, Newspaper, LogOut, Menu, UtensilsCrossed } from "lucide-react";
+import {
+  House,
+  Newspaper,
+  LogOut,
+  Menu,
+  UtensilsCrossed,
+  Mail,
+} from "lucide-react";
 import { useLocation, Link } from "react-router";
 import {
   Sheet,
@@ -18,6 +25,7 @@ function NavMenu() {
   const isHome = pathname === "/";
   const isApps = pathname.startsWith("/apps");
   const isFood = pathname === "/food";
+  const isEmails = pathname === "/emails";
 
   return (
     <>
@@ -80,6 +88,22 @@ function NavMenu() {
                     </Link>
                   </Button>
                 </SheetClose>
+
+                <SheetClose asChild>
+                  <Button
+                    variant={isEmails ? "secondary" : "ghost"}
+                    asChild
+                    className="inline-flex justify-start gap-2"
+                  >
+                    <Link
+                      to="/emails"
+                      aria-current={isEmails ? "page" : undefined}
+                    >
+                      <Mail className="h-4 w-4" />
+                      Emails
+                    </Link>
+                  </Button>
+                </SheetClose>
               </div>
 
               <SheetClose asChild>
@@ -130,6 +154,16 @@ function NavMenu() {
             <Link to="/food">
               <UtensilsCrossed />
               Food
+            </Link>
+          </Button>
+          <Button
+            variant={isEmails ? "secondary" : "ghost"}
+            asChild
+            className="inline-flex justify-start"
+          >
+            <Link to="/emails">
+              <Mail />
+              Emails
             </Link>
           </Button>
         </div>
