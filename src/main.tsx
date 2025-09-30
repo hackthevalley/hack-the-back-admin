@@ -8,6 +8,7 @@ import Apps from "./pages/Apps.tsx";
 import Food from "./pages/Food.tsx";
 import { Toaster } from "./components/ui/sonner.tsx";
 import ViewApplicant from "./pages/ViewApplicant.tsx";
+import { ApplicantsProvider } from "./utils/ApplicantsContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
