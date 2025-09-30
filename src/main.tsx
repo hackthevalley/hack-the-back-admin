@@ -14,14 +14,16 @@ import { ApplicantsProvider } from "./utils/ApplicantsContext.tsx";
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
     <AuthProvider>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/apps" element={<Apps />} />
-        <Route path="/apps/:app_id" element={<ViewApplicant />} />
-        <Route path="/food" element={<Food />} />
-        <Route path="/emails" element={<Emails />} />
-      </Routes>
+      <ApplicantsProvider>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/apps" element={<Apps />} />
+          <Route path="/apps/:app_id" element={<ViewApplicant />} />
+          <Route path="/food" element={<Food />} />
+          <Route path="/emails" element={<Emails />} />
+        </Routes>
+      </ApplicantsProvider>
       <Toaster position="bottom-right" richColors />
     </AuthProvider>
   </BrowserRouter>
