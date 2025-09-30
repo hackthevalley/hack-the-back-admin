@@ -1,7 +1,7 @@
 import { useContext } from "react";
 import { UserContext } from "@/utils/auth";
 import { Button } from "./ui/button";
-import { House, Newspaper, LogOut, Menu } from "lucide-react";
+import { House, Newspaper, LogOut, Menu, UtensilsCrossed } from "lucide-react";
 import { useLocation, Link } from "react-router";
 import {
   Sheet,
@@ -17,6 +17,7 @@ function NavMenu() {
   const { pathname } = useLocation();
   const isHome = pathname === "/";
   const isApps = pathname.startsWith("/apps");
+  const isFood = pathname === "/food";
 
   return (
     <>
@@ -66,6 +67,19 @@ function NavMenu() {
                     </Link>
                   </Button>
                 </SheetClose>
+
+                <SheetClose asChild>
+                  <Button
+                    variant={isFood ? "secondary" : "ghost"}
+                    asChild
+                    className="inline-flex justify-start gap-2"
+                  >
+                    <Link to="/food" aria-current={isFood ? "page" : undefined}>
+                      <UtensilsCrossed className="h-4 w-4" />
+                      Food
+                    </Link>
+                  </Button>
+                </SheetClose>
               </div>
 
               <SheetClose asChild>
@@ -106,6 +120,16 @@ function NavMenu() {
             <Link to="/apps">
               <Newspaper />
               Hacker Apps
+            </Link>
+          </Button>
+          <Button
+            variant={isFood ? "secondary" : "ghost"}
+            asChild
+            className="inline-flex justify-start"
+          >
+            <Link to="/food">
+              <UtensilsCrossed />
+              Food
             </Link>
           </Button>
         </div>
