@@ -545,6 +545,7 @@ export function Applicants({
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 setSearch(searchInput);
+                setOffset(0);
               }
             }}
             className="max-w-md"
@@ -553,6 +554,7 @@ export function Applicants({
             variant="default"
             onClick={() => {
               setSearch(searchInput);
+              setOffset(0);
             }}
           >
             Search
@@ -739,6 +741,8 @@ export function Applicants({
               setGender("");
               setUTSC("");
               setDateSort("");
+              setRole("");
+              setOffset(0);
             }}
           >
             Clear Filters
