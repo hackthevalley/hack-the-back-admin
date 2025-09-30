@@ -156,11 +156,12 @@ export function Applicants({
 
   useEffect(() => {
     if (applicants) {
-      applicants.forEach((applicant) => {
-        applicant.created_at = convertToDateTime(applicant.created_at);
-        applicant.updated_at = convertToDateTime(applicant.updated_at);
-      });
-      setData(applicants);
+      const processedApplicants = applicants.map((applicant) => ({
+        ...applicant,
+        created_at: convertToDateTime(applicant.created_at),
+        updated_at: convertToDateTime(applicant.updated_at),
+      }));
+      setData(processedApplicants);
     }
   }, [applicants]);
 
@@ -184,31 +185,41 @@ export function Applicants({
   };
 
   function convertToDateTime(input: string): string {
+    if (!input || input === "unknown" || input === "N/A") {
+      return "N/A";
+    }
+
     const d = new Date(input);
+    if (isNaN(d.getTime())) {
+      return "Invalid Date";
+    }
 
-    const parts = new Intl.DateTimeFormat("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-      timeZone: "America/Toronto",
-      timeZoneName: "short",
-    }).formatToParts(d);
+    try {
+      const parts = new Intl.DateTimeFormat("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+        timeZone: "America/Toronto",
+      }).formatToParts(d);
 
-    const get = (type: Intl.DateTimeFormatPartTypes) =>
-      parts.find((p) => p.type === type)?.value ?? "";
+      const get = (type: Intl.DateTimeFormatPartTypes) =>
+        parts.find((p) => p.type === type)?.value ?? "";
 
-    const month = get("month");
-    const day = get("day");
-    const year = get("year");
-    const hour = get("hour");
-    const minute = get("minute");
-    const dayPeriod = get("dayPeriod");
-    const tzName = get("timeZoneName");
+      const month = get("month");
+      const day = get("day");
+      const year = get("year");
+      const hour = get("hour");
+      const minute = get("minute");
+      const dayPeriod = get("dayPeriod");
 
-    return `${month} ${day}, ${year} - ${hour}:${minute}${dayPeriod} ${tzName}`;
+      return `${month} ${day}, ${year} ${hour}:${minute}${dayPeriod}`;
+    } catch (error) {
+      console.error("Error formatting date:", input, error);
+      return "Invalid Date";
+    }
   }
 
   const updateApplicationStatus = (id: string, newStatus: Status) => {
