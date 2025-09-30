@@ -5,6 +5,7 @@ import Home from "./pages/Home.tsx";
 import Login from "./pages/Login.tsx";
 import { AuthProvider } from "./utils/auth.tsx";
 import Apps from "./pages/Apps.tsx";
+import Food from "./pages/Food.tsx";
 import { Toaster } from "./components/ui/sonner.tsx";
 import ViewApplicant from "./pages/ViewApplicant.tsx";
 import { ApplicantsProvider } from "./utils/ApplicantsContext.tsx";
@@ -12,14 +13,13 @@ import { ApplicantsProvider } from "./utils/ApplicantsContext.tsx";
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
     <AuthProvider>
-      <ApplicantsProvider>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/apps" element={<Apps />} />
-          <Route path="/apps/:app_id" element={<ViewApplicant />} />
-        </Routes>
-      </ApplicantsProvider>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/apps" element={<Apps />} />
+        <Route path="/apps/:app_id" element={<ViewApplicant />} />
+        <Route path="/food" element={<Food />} />
+      </Routes>
       <Toaster position="bottom-right" richColors />
     </AuthProvider>
   </BrowserRouter>
