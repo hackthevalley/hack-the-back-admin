@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Applicants } from "@/components/Applicants";
 import { useApplicants } from "@/utils/ApplicantsContext";
 import NavMenu from "@/components/Navmenu";
@@ -10,7 +9,7 @@ function Apps() {
   const { isAuthenticated } = useContext(UserContext) ?? {};
   const [offset, setOffset] = useState(0);
   const [search, setSearch] = useState("");
-  const [age, setAge] = useState("");
+  const [levelOfStudy, setLevelOfStudy] = useState("");
   const [gender, setGender] = useState("");
   const [utsc, setUTSC] = useState("");
   const [dateSort, setDateSort] = useState("");
@@ -31,7 +30,7 @@ function Apps() {
         offset,
         limit: 25,
         search,
-        age,
+        level_of_study: levelOfStudy,
         gender,
         school: utsc,
         dateSort,
@@ -41,7 +40,7 @@ function Apps() {
   }, [
     offset,
     search,
-    age,
+    levelOfStudy,
     gender,
     utsc,
     dateSort,
@@ -51,25 +50,27 @@ function Apps() {
   ]);
 
   return (
-    <div className="flex h-screen w-full">
+    <div className="flex h-screen w-full overflow-hidden">
       <NavMenu />
-      <Applicants
-        applicants={applicants}
-        setOffset={setOffset}
-        offset={offset}
-        search={search}
-        setSearch={setSearch}
-        age={age}
-        setAge={setAge}
-        gender={gender}
-        setGender={setGender}
-        utsc={utsc}
-        setUTSC={setUTSC}
-        dateSort={dateSort}
-        setDateSort={setDateSort}
-        role={role}
-        setRole={setRole}
-      />
+      <div className="flex-1 overflow-auto">
+        <Applicants
+          applicants={applicants}
+          setOffset={setOffset}
+          offset={offset}
+          search={search}
+          setSearch={setSearch}
+          levelOfStudy={levelOfStudy}
+          setLevelOfStudy={setLevelOfStudy}
+          gender={gender}
+          setGender={setGender}
+          utsc={utsc}
+          setUTSC={setUTSC}
+          dateSort={dateSort}
+          setDateSort={setDateSort}
+          role={role}
+          setRole={setRole}
+        />
+      </div>
     </div>
   );
 }

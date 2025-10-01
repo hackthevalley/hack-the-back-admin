@@ -26,7 +26,7 @@ export type ApplicantsQueryParams = {
   offset?: number;
   limit?: number;
   search?: string;
-  age?: string;
+  level_of_study?: string;
   gender?: string;
   school?: string;
   dateSort?: string;
@@ -53,7 +53,8 @@ export function ApplicantsProvider({ children }: { children: ReactNode }) {
         queryParams.append("limit", (params?.limit ?? 25).toString());
 
         if (params?.search) queryParams.append("search", params.search);
-        if (params?.age) queryParams.append("age", params.age);
+        if (params?.level_of_study)
+          queryParams.append("level_of_study", params.level_of_study);
         if (params?.gender) queryParams.append("gender", params.gender);
         if (params?.school) queryParams.append("school", params.school);
         if (params?.dateSort) queryParams.append("date_sort", params.dateSort);

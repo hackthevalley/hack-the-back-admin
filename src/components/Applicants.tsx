@@ -71,7 +71,6 @@ import {
 } from "@/components/ui/table";
 import fetchInstance from "@/utils/api";
 import { toast } from "sonner";
-import AgeRangeSlider from "@/components/AgeRangeSlider";
 
 enum Status {
   ACCOUNT_INACTIVE = "ACCOUNT_INACTIVE",
@@ -108,8 +107,8 @@ export function Applicants({
   offset,
   search,
   setSearch,
-  age,
-  setAge,
+  levelOfStudy,
+  setLevelOfStudy,
   gender,
   setGender,
   utsc,
@@ -124,8 +123,8 @@ export function Applicants({
   offset: number;
   search: string;
   setSearch: Dispatch<SetStateAction<string>>;
-  age: string;
-  setAge: Dispatch<SetStateAction<string>>;
+  levelOfStudy: string;
+  setLevelOfStudy: Dispatch<SetStateAction<string>>;
   gender: string;
   setGender: Dispatch<SetStateAction<string>>;
   utsc: string;
@@ -141,12 +140,6 @@ export function Applicants({
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
   const [searchInput, setSearchInput] = useState(search);
-  const AGE_MIN = 13;
-  const AGE_MAX = 40;
-  const [ageRange, setAgeRange] = useState<[number, number]>([
-    AGE_MIN,
-    AGE_MAX,
-  ]);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const genderOptions = [
     "Male",
@@ -154,6 +147,16 @@ export function Applicants({
     "Non-binary",
     "Other",
     "Prefer not to say",
+  ];
+  const levelOfStudyOptions = [
+    "High School",
+    "Freshman - Undergraduate",
+    "Sophomore - Undergraduate",
+    "Junior - Undergraduate",
+    "Senior - Undergraduate",
+    "Graduate",
+    "PhD",
+    "Other",
   ];
 
   useEffect(() => {
@@ -166,25 +169,6 @@ export function Applicants({
       setData(processedApplicants);
     }
   }, [applicants]);
-
-  useEffect(() => {
-    if (age && age.includes("-")) {
-      const [min, max] = age.split("-").map(Number);
-      setAgeRange([min, max]);
-    } else if (!age) {
-      setAgeRange([AGE_MIN, AGE_MAX]);
-    }
-  }, [age]);
-
-  const handleAgeRangeChange = (newRange: [number, number]) => {
-    setAgeRange(newRange);
-    if (newRange[0] !== AGE_MIN || newRange[1] !== AGE_MAX) {
-      const newAgeFilter = `${newRange[0]}-${newRange[1]}`;
-      setAge(newAgeFilter);
-    } else {
-      setAge("");
-    }
-  };
 
   function convertToDateTime(input: string): string {
     if (!input || input === "unknown" || input === "N/A") {
@@ -537,9 +521,10 @@ export function Applicants({
   };
 
   return (
-    <div className="w-full py-4 px-6">
-      <div className="flex flex-col lg:flex-row items-start lg:items-center py-4 gap-4">
-        <div className="flex items-center gap-4 flex-1">
+    <div className="w-full py-4 px-4 sm:px-6">
+      <div className="flex flex-col gap-4 py-4">
+        {/* Search and basic filters row */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-wrap">
           <Input
             placeholder="Search"
             value={searchInput}
@@ -550,7 +535,7 @@ export function Applicants({
                 setOffset(0);
               }
             }}
-            className="max-w-md"
+            className="w-full sm:max-w-xs"
           />
           <Button
             variant="default"
@@ -558,12 +543,14 @@ export function Applicants({
               setSearch(searchInput);
               setOffset(0);
             }}
+            className="w-full sm:w-auto"
           >
             Search
           </Button>
           <Button
             variant="outline"
             onClick={() => setShowAdvanced((prev) => !prev)}
+            className="w-full sm:w-auto"
           >
             {showAdvanced ? "Hide Advanced" : "Advanced Filters"}
           </Button>
@@ -572,7 +559,7 @@ export function Applicants({
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                className="min-w-[150px] justify-between"
+                className="w-full sm:w-auto sm:min-w-[150px] justify-between"
               >
                 {dateSort === "oldest"
                   ? "Oldest First"
@@ -600,7 +587,7 @@ export function Applicants({
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                className="min-w-[150px] justify-between"
+                className="w-full sm:w-auto sm:min-w-[150px] justify-between"
               >
                 {role ? role.replace(/_/g, " ") : "Filter by Status"}
                 <ChevronDown className="ml-2 h-4 w-4" />
@@ -621,13 +608,41 @@ export function Applicants({
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="w-full sm:w-auto">
+                Columns <ChevronDown />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {table
+                .getAllColumns()
+                .filter((column) => column.getCanHide())
+                .map((column) => {
+                  return (
+                    <DropdownMenuCheckboxItem
+                      key={column.id}
+                      className="capitalize"
+                      checked={column.getIsVisible()}
+                      onCheckedChange={(value: boolean) =>
+                        column.toggleVisibility(!!value)
+                      }
+                    >
+                      {column.id}
+                    </DropdownMenuCheckboxItem>
+                  );
+                })}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
-        <div className="flex items-center space-x-2">
+        {/* Bulk actions row */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           <Button
             variant="success"
             disabled={Object.keys(rowSelection).length === 0}
             onClick={() => handleBulkAction(Status.ACCEPTED)}
+            className="w-full sm:w-auto"
           >
             Accept Selected
           </Button>
@@ -635,6 +650,7 @@ export function Applicants({
             variant="destructive"
             disabled={Object.keys(rowSelection).length === 0}
             onClick={() => handleBulkAction(Status.REJECTED)}
+            className="w-full sm:w-auto"
           >
             Reject Selected
           </Button>
@@ -642,53 +658,47 @@ export function Applicants({
             variant="default"
             disabled={Object.keys(rowSelection).length === 0}
             onClick={() => handleBulkAction(Status.WAITLISTED)}
+            className="w-full sm:w-auto"
           >
             Waitlist Selected
           </Button>
         </div>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline">
-              Columns <ChevronDown />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value: boolean) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                );
-              })}
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
       {showAdvanced && (
-        <div className="flex items-center py-2 space-x-2">
-          <AgeRangeSlider
-            value={ageRange}
-            onValueChange={handleAgeRangeChange}
-            min={AGE_MIN}
-            max={AGE_MAX}
-            step={1}
-          />
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center py-2 gap-2">
+          {/* Level of Study dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto sm:min-w-[200px] justify-between"
+              >
+                {levelOfStudy || "All Study Levels"}
+                <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-[250px]">
+              <DropdownMenuItem onClick={() => setLevelOfStudy("")}>
+                All Study Levels
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              {levelOfStudyOptions.map((opt) => (
+                <DropdownMenuItem
+                  key={opt}
+                  onClick={() => setLevelOfStudy(opt)}
+                >
+                  {opt}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {/* UTSC dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                className="ml-2 min-w-[150px] justify-between"
+                className="w-full sm:w-auto sm:min-w-[150px] justify-between"
               >
                 {utsc == "University of Toronto (Scarborough)"
                   ? "UTSC Only"
@@ -714,7 +724,7 @@ export function Applicants({
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                className="ml-2 min-w-[150px] justify-between"
+                className="w-full sm:w-auto sm:min-w-[150px] justify-between"
               >
                 {gender || "All Genders"}
                 <ChevronDown className="ml-2 h-4 w-4" />
@@ -738,20 +748,20 @@ export function Applicants({
             onClick={() => {
               setSearch("");
               setSearchInput("");
-              setAge("");
-              setAgeRange([AGE_MIN, AGE_MAX]);
+              setLevelOfStudy("");
               setGender("");
               setUTSC("");
               setDateSort("");
               setRole("");
               setOffset(0);
             }}
+            className="w-full sm:w-auto"
           >
             Clear Filters
           </Button>
         </div>
       )}
-      <div className="overflow-hidden rounded-md border-1 border-black p-2">
+      <div className="overflow-x-auto rounded-md border-1 border-black p-2">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
