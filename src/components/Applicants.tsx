@@ -85,6 +85,8 @@ enum Status {
   ACCEPTED_INVITE = "ACCEPTED_INVITE",
   REJECTED_INVITE = "REJECTED_INVITE",
   SCANNED_IN = "SCANNED_IN",
+  WALK_IN = "WALK_IN",
+  WALK_IN_SUBMITTED = "WALK_IN_SUBMITTED",
 }
 
 export interface ApplicantProps {
