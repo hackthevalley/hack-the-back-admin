@@ -339,21 +339,6 @@ export function Applicants({
       ),
     },
     {
-      accessorKey: "age",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Age
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => <div className="">{row.getValue("age") || "N/A"}</div>,
-    },
-    {
       accessorKey: "gender",
       header: ({ column }) => {
         return (
