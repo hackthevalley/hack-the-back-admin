@@ -78,6 +78,7 @@ function Emails() {
   const { isAuthenticated } = useContext(UserContext) ?? {};
   const navigate = useNavigate();
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
+  const [customTemplatePath, setCustomTemplatePath] = useState<string>("");
   const [selectedStatus, setSelectedStatus] = useState<string>("");
   const [subject, setSubject] = useState<string>("");
   const [textBody, setTextBody] = useState<string>("");
@@ -91,8 +92,16 @@ function Emails() {
   }, [isAuthenticated, navigate]);
 
   const handleSendBulkEmail = async () => {
+    const templatePath =
+      selectedTemplate === "other" ? customTemplatePath : selectedTemplate;
+
     if (!selectedTemplate || !selectedStatus || !subject || !textBody) {
       toast.error("Please fill in all required fields");
+      return;
+    }
+
+    if (selectedTemplate === "other" && !customTemplatePath.trim()) {
+      toast.error("Please enter a custom template path");
       return;
     }
 
@@ -100,7 +109,7 @@ function Emails() {
     if (contextData.trim()) {
       try {
         context = JSON.parse(contextData);
-      } catch (error) {
+      } catch {
         toast.error("Invalid JSON in context field");
         return;
       }
@@ -112,7 +121,7 @@ function Emails() {
       const response = await fetchInstance("admin/account/send_bulk_email", {
         method: "POST",
         body: JSON.stringify({
-          template_path: selectedTemplate,
+          template_path: templatePath,
           status: selectedStatus,
           subject: subject,
           text_body: textBody,
@@ -135,6 +144,7 @@ function Emails() {
 
       // Reset form
       setSelectedTemplate("");
+      setCustomTemplatePath("");
       setSelectedStatus("");
       setSubject("");
       setTextBody("");
@@ -193,9 +203,32 @@ function Emails() {
                         </div>
                       </SelectItem>
                     ))}
+                    <SelectItem value="other">
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium">Other</span>
+                        <span className="text-xs text-muted-foreground">
+                          Use a custom template path
+                        </span>
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+
+              {selectedTemplate === "other" && (
+                <div className="space-y-2">
+                  <Label htmlFor="customPath">Custom Template Path *</Label>
+                  <Input
+                    id="customPath"
+                    placeholder="templates/custom_email.html"
+                    value={customTemplatePath}
+                    onChange={(e) => setCustomTemplatePath(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Enter the path to your custom email template
+                  </p>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="status">Target Status *</Label>
@@ -263,7 +296,8 @@ function Emails() {
                     !selectedTemplate ||
                     !selectedStatus ||
                     !subject ||
-                    !textBody
+                    !textBody ||
+                    (selectedTemplate === "other" && !customTemplatePath.trim())
                   }
                   className="flex items-center gap-2"
                 >
