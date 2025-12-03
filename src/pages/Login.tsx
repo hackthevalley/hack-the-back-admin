@@ -25,7 +25,7 @@ function Login() {
     urlEncodedData.append("password", formData.password);
 
     try {
-      const response = await fetchInstance("account/login", {
+      const response = await fetchInstance("account/sessions", {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",

@@ -67,7 +67,7 @@ export default function ViewApplicant() {
 
   useEffect(() => {
     if (!app_id) return;
-    fetchInstance(`admin/account/getapplication?application_id=${app_id}`, {
+    fetchInstance(`admin/account/applications/${app_id}`, {
       method: "GET",
     })
       .then((applicationData) => {
@@ -78,7 +78,7 @@ export default function ViewApplicant() {
   }, [app_id]);
 
   useEffect(() => {
-    fetchInstance("forms/getquestions")
+    fetchInstance("forms/questions")
       .then((questionsData) => {
         setQuestions(questionsData);
       })
@@ -88,7 +88,7 @@ export default function ViewApplicant() {
   useEffect(() => {
     if (!app_id) return;
 
-    fetchInstance(`admin/account/file/${app_id}`, { method: "GET" }, "blob")
+    fetchInstance(`admin/account/applications/${app_id}/resume`, { method: "GET" }, "blob")
       .then((blob) => {
         const url = URL.createObjectURL(blob);
         setResumeUrl(url);
