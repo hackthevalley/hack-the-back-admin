@@ -51,7 +51,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return;
       }
       try {
-        const response = await fetchInstance("account/refresh", {
+        const response = await fetchInstance("account/tokens", {
           method: "POST",
         });
         const payload: any = jose.decodeJwt(response.access_token);

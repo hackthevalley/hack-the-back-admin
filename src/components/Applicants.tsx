@@ -247,8 +247,8 @@ export function Applicants({
   const handleApplicantAction = async (action: Status, app_id: string) => {
     try {
       const res = await fetchInstance(
-        `admin/account/updatestatus/${app_id}?request=${action}`,
-        { method: "PUT" }
+        `admin/account/applications/${app_id}/status?request=${action}`,
+        { method: "PATCH" }
       );
 
       if (res.application_id == app_id) {
@@ -489,8 +489,8 @@ export function Applicants({
       await Promise.all(
         selectedRows.map((applicant) =>
           fetchInstance(
-            `admin/account/updatestatus/${applicant.app_id}?request=${action}`,
-            { method: "PUT" }
+            `admin/account/applications/${applicant.app_id}/status?request=${action}`,
+            { method: "PATCH" }
           ).then((res) => {
             if (res.application_id === applicant.app_id) {
               updateApplicationStatus(applicant.app_id, action);

@@ -61,7 +61,7 @@ export function ApplicantsProvider({ children }: { children: ReactNode }) {
         if (params?.role) queryParams.append("role", params.role);
 
         const data = await fetchInstance(
-          `admin/account/getallapps?${queryParams.toString()}`,
+          `admin/account/applications?${queryParams.toString()}`,
           {
             method: "GET",
           }

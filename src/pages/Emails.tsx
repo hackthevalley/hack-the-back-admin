@@ -118,7 +118,7 @@ function Emails() {
     setIsSending(true);
 
     try {
-      const response = await fetchInstance("admin/account/send_bulk_email", {
+      const response = await fetchInstance("admin/account/bulk-emails", {
         method: "POST",
         body: JSON.stringify({
           template_path: templatePath,
