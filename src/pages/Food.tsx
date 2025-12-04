@@ -38,7 +38,7 @@ function Food() {
   const fetchMeals = async () => {
     try {
       setLoading(true);
-      const response = await fetchInstance("meal/getmeals");
+      const response = await fetchInstance("meals");
       setMeals(response);
     } catch (error: any) {
       toast.error(error.message || "Failed to load meals");
@@ -61,7 +61,7 @@ function Food() {
 
         // Deactivate all currently active meals
         for (const meal of activeMeals) {
-          await fetchInstance(`meal/update/${meal.id}`, {
+          await fetchInstance(`meals/${meal.id}`, {
             method: "PATCH",
             body: JSON.stringify({ is_active: false }),
           });
@@ -69,7 +69,7 @@ function Food() {
       }
 
       // Now toggle the selected meal
-      await fetchInstance(`meal/update/${mealId}`, {
+      await fetchInstance(`meals/${mealId}`, {
         method: "PATCH",
         body: JSON.stringify({ is_active: !currentStatus }),
       });
