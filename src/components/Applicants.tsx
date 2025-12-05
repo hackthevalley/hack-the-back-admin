@@ -753,7 +753,14 @@ export function Applicants({
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead
+                      key={header.id}
+                      className={
+                        header.id === "actions"
+                          ? "sticky right-0 bg-background shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.1)]"
+                          : ""
+                      }
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -774,7 +781,14 @@ export function Applicants({
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell
+                      key={cell.id}
+                      className={
+                        cell.column.id === "actions"
+                          ? "sticky right-0 bg-background shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.1)]"
+                          : ""
+                      }
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
