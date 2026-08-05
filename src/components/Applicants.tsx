@@ -99,6 +99,9 @@ export interface ApplicantProps {
   age?: string;
   gender?: string;
   school?: string;
+  ranking_mu?: number | null;
+  ranking_sigma_sq?: number | null;
+  ranking_comparison_count?: number;
 }
 
 export function Applicants({
@@ -117,6 +120,8 @@ export function Applicants({
   setDateSort,
   role,
   setRole,
+  rankingSort,
+  setRankingSort,
 }: {
   applicants?: ApplicantProps[];
   setOffset: Dispatch<SetStateAction<number>>;
@@ -133,6 +138,8 @@ export function Applicants({
   setDateSort: Dispatch<SetStateAction<string>>;
   role: string;
   setRole: Dispatch<SetStateAction<string>>;
+  rankingSort: string;
+  setRankingSort: Dispatch<SetStateAction<string>>;
 }) {
   const [data, setData] = useState(applicants ?? []);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -380,6 +387,23 @@ export function Applicants({
       ),
     },
     {
+      accessorKey: "ranking_mu",
+      header: "Crowd-BT Rating",
+      cell: ({ row }) => {
+        const rating = row.original.ranking_mu;
+        return (
+          <div>
+            <div className="font-medium">
+              {rating == null ? "Unranked" : rating.toFixed(4)}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {row.original.ranking_comparison_count ?? 0} comparisons
+            </div>
+          </div>
+        );
+      },
+    },
+    {
       accessorKey: "created_at",
       header: ({ column }) => {
         return (
@@ -559,11 +583,58 @@ export function Applicants({
                 No Date Sort
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setDateSort("oldest")}>
+              <DropdownMenuItem
+                onClick={() => {
+                  setDateSort("oldest");
+                  setRankingSort("");
+                }}
+              >
                 Oldest First
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setDateSort("latest")}>
+              <DropdownMenuItem
+                onClick={() => {
+                  setDateSort("latest");
+                  setRankingSort("");
+                }}
+              >
                 Latest First
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto sm:min-w-[170px] justify-between"
+              >
+                {rankingSort === "highest"
+                  ? "Highest Rated"
+                  : rankingSort === "lowest"
+                    ? "Lowest Rated"
+                    : "Sort by Rating"}
+                <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-[170px]">
+              <DropdownMenuItem onClick={() => setRankingSort("")}>
+                No Rating Sort
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => {
+                  setRankingSort("highest");
+                  setDateSort("");
+                }}
+              >
+                Highest Rated
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  setRankingSort("lowest");
+                  setDateSort("");
+                }}
+              >
+                Lowest Rated
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -738,6 +809,7 @@ export function Applicants({
               setUTSC("");
               setDateSort("");
               setRole("");
+              setRankingSort("");
               setOffset(0);
             }}
             className="w-full sm:w-auto"

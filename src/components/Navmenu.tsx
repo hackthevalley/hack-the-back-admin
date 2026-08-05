@@ -8,6 +8,7 @@ import {
   Menu,
   UtensilsCrossed,
   Mail,
+  Scale,
 } from "lucide-react";
 import { useLocation, Link } from "react-router";
 import {
@@ -26,6 +27,7 @@ function NavMenu() {
   const isApps = pathname.startsWith("/apps");
   const isFood = pathname === "/food";
   const isEmails = pathname === "/emails";
+  const isRank = pathname === "/rank";
 
   return (
     <>
@@ -72,6 +74,19 @@ function NavMenu() {
                     <Link to="/apps" aria-current={isApps ? "page" : undefined}>
                       <Newspaper className="h-4 w-4" />
                       Hacker Apps
+                    </Link>
+                  </Button>
+                </SheetClose>
+
+                <SheetClose asChild>
+                  <Button
+                    variant={isRank ? "secondary" : "ghost"}
+                    asChild
+                    className="inline-flex justify-start gap-2"
+                  >
+                    <Link to="/rank" aria-current={isRank ? "page" : undefined}>
+                      <Scale className="h-4 w-4" />
+                      Rank
                     </Link>
                   </Button>
                 </SheetClose>
@@ -144,6 +159,16 @@ function NavMenu() {
             <Link to="/apps">
               <Newspaper />
               Hacker Apps
+            </Link>
+          </Button>
+          <Button
+            variant={isRank ? "secondary" : "ghost"}
+            asChild
+            className="inline-flex justify-start"
+          >
+            <Link to="/rank">
+              <Scale />
+              Rank
             </Link>
           </Button>
           <Button
