@@ -20,6 +20,9 @@ export type ApplicantProps = {
   gender?: string;
   school?: string;
   role?: string;
+  ranking_mu?: number | null;
+  ranking_sigma_sq?: number | null;
+  ranking_comparison_count?: number;
 };
 
 export type ApplicantsQueryParams = {
@@ -31,6 +34,11 @@ export type ApplicantsQueryParams = {
   school?: string;
   dateSort?: string;
   role?: string;
+  rankingSort?: string;
+};
+
+type ApplicantsApiResponse = {
+  application: ApplicantProps[];
 };
 
 type ApplicantsContextType = {
@@ -59,8 +67,10 @@ export function ApplicantsProvider({ children }: { children: ReactNode }) {
         if (params?.school) queryParams.append("school", params.school);
         if (params?.dateSort) queryParams.append("date_sort", params.dateSort);
         if (params?.role) queryParams.append("role", params.role);
+        if (params?.rankingSort)
+          queryParams.append("ranking_sort", params.rankingSort);
 
-        const data = await fetchInstance(
+        const data: ApplicantsApiResponse = await fetchInstance(
           `admin/account/applications?${queryParams.toString()}`,
           {
             method: "GET",
@@ -68,7 +78,7 @@ export function ApplicantsProvider({ children }: { children: ReactNode }) {
         );
 
         setApplicants(
-          data.application.map((app: any) => ({
+          data.application.map((app) => ({
             first_name: app.first_name,
             last_name: app.last_name,
             email: app.email ?? "",
@@ -79,6 +89,9 @@ export function ApplicantsProvider({ children }: { children: ReactNode }) {
             age: app.age ?? "unknown",
             gender: app.gender ?? "unknown",
             school: app.school ?? "unknown",
+            ranking_mu: app.ranking_mu,
+            ranking_sigma_sq: app.ranking_sigma_sq,
+            ranking_comparison_count: app.ranking_comparison_count ?? 0,
           }))
         );
       } catch (error) {

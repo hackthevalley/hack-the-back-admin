@@ -14,6 +14,7 @@ function Apps() {
   const [utsc, setUTSC] = useState("");
   const [dateSort, setDateSort] = useState("");
   const [role, setRole] = useState<string>("");
+  const [rankingSort, setRankingSort] = useState("");
   const navigate = useNavigate();
   const { applicants, refreshApplicants } = useApplicants();
 
@@ -35,6 +36,7 @@ function Apps() {
         school: utsc,
         dateSort,
         role,
+        rankingSort,
       });
     }
   }, [
@@ -45,6 +47,7 @@ function Apps() {
     utsc,
     dateSort,
     role,
+    rankingSort,
     isAuthenticated,
     refreshApplicants,
   ]);
@@ -69,6 +72,8 @@ function Apps() {
           setDateSort={setDateSort}
           role={role}
           setRole={setRole}
+          rankingSort={rankingSort}
+          setRankingSort={setRankingSort}
         />
       </div>
     </div>
