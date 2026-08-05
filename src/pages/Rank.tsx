@@ -22,6 +22,13 @@ type ApplicationDetail = {
   form_answers: Answer[];
   form_answersfile: string | null;
 };
+type ExperienceCompany = {
+  name: string;
+  confidence: number;
+  source_text: string;
+  page: number;
+};
+type ResumeExperience = { companies: ExperienceCompany[] };
 
 const HIDDEN_QUESTION_LABELS = new Set([
   "first name",
@@ -37,12 +44,14 @@ const HIDDEN_QUESTION_LABELS = new Set([
 function ApplicationCard({
   side,
   detail,
+  experience,
   questions,
   disabled,
   onChoose,
 }: {
   side: "A" | "B";
   detail: ApplicationDetail;
+  experience: ResumeExperience;
   questions: Question[];
   disabled: boolean;
   onChoose: () => void;
@@ -61,6 +70,22 @@ function ApplicationCard({
       </CardHeader>
       <CardContent className="flex min-h-0 flex-1 flex-col gap-4">
         <dl className="max-h-[calc(100vh-22rem)] flex-1 space-y-3 overflow-y-auto pr-2">
+          <div className="border-b pb-2">
+            <dt className="text-sm font-semibold">Experience</dt>
+            <dd className="text-sm text-muted-foreground">
+              {experience.companies.length > 0 ? (
+                <ul className="list-inside list-disc">
+                  {experience.companies.map((company) => (
+                    <li key={`${company.name}-${company.page}`}>
+                      {company.name}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                "No companies detected"
+              )}
+            </dd>
+          </div>
           {visibleQuestions.map((question) => {
             const answer = answers.get(question.question_id)?.trim();
             return (
@@ -86,6 +111,7 @@ export default function Rank() {
   const navigate = useNavigate();
   const [pair, setPair] = useState<Pair | null>(null);
   const [details, setDetails] = useState<ApplicationDetail[]>([]);
+  const [experience, setExperience] = useState<ResumeExperience[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const questionsRef = useRef<Question[]>([]);
   const [loading, setLoading] = useState(true);
@@ -101,24 +127,39 @@ export default function Rank() {
     setError(null);
     try {
       const nextPair: Pair = await fetchInstance("admin/judging/pair");
-      const [left, right, questionData] = await Promise.all([
-        fetchInstance(
-          `admin/account/applications/${nextPair.left.application_id}`,
-        ),
-        fetchInstance(
-          `admin/account/applications/${nextPair.right.application_id}`,
-        ),
-        questionsRef.current.length > 0
-          ? Promise.resolve(questionsRef.current)
-          : fetchInstance("forms/questions"),
-      ]);
+      const emptyExperience: ResumeExperience = { companies: [] };
+      const loadExperience = async (applicationId: string) => {
+        try {
+          return await fetchInstance(
+            `admin/account/applications/${applicationId}/resume-experience`,
+          );
+        } catch {
+          return emptyExperience;
+        }
+      };
+      const [left, right, leftExperience, rightExperience, questionData] =
+        await Promise.all([
+          fetchInstance(
+            `admin/account/applications/${nextPair.left.application_id}`,
+          ),
+          fetchInstance(
+            `admin/account/applications/${nextPair.right.application_id}`,
+          ),
+          loadExperience(nextPair.left.application_id),
+          loadExperience(nextPair.right.application_id),
+          questionsRef.current.length > 0
+            ? Promise.resolve(questionsRef.current)
+            : fetchInstance("forms/questions"),
+        ]);
       setPair(nextPair);
       setDetails([left, right]);
+      setExperience([leftExperience, rightExperience]);
       setQuestions(questionData);
       questionsRef.current = questionData;
     } catch (caught) {
       setPair(null);
       setDetails([]);
+      setExperience([]);
       setError(caught instanceof Error ? caught.message : "Unable to load a pair");
     } finally {
       setLoading(false);
@@ -173,11 +214,12 @@ export default function Rank() {
                 Try again
               </Button>
             </div>
-          ) : pair && details.length === 2 ? (
+          ) : pair && details.length === 2 && experience.length === 2 ? (
             <div className="grid gap-6 lg:grid-cols-2">
               <ApplicationCard
                 side="A"
                 detail={details[0]}
+                experience={experience[0]}
                 questions={questions}
                 disabled={submitting}
                 onChoose={() => void chooseWinner(pair.left.application_id)}
@@ -185,6 +227,7 @@ export default function Rank() {
               <ApplicationCard
                 side="B"
                 detail={details[1]}
+                experience={experience[1]}
                 questions={questions}
                 disabled={submitting}
                 onChoose={() => void chooseWinner(pair.right.application_id)}
