@@ -86,9 +86,7 @@ export default function StatusChart({
                 <Cell key={`cell-${entry.name}`} fill={entry.color} />
               ))}
             </Pie>
-            <Tooltip
-              formatter={(value: number, name: string) => [value, name]}
-            />
+            <Tooltip formatter={(value, name) => [value ?? 0, name]} />
           </PieChart>
         </ResponsiveContainer>
       )}
