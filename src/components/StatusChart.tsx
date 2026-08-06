@@ -98,6 +98,13 @@ export default function StatusChart({
                       background: "hsl(var(--popover))",
                       color: "hsl(var(--popover-foreground))",
                     }}
+                    labelStyle={{
+                      color: "hsl(var(--popover-foreground))",
+                      fontWeight: 600,
+                    }}
+                    itemStyle={{
+                      color: "hsl(var(--popover-foreground))",
+                    }}
                   />
                   <text
                     x="50%"
