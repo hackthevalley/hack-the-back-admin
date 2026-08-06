@@ -1,5 +1,6 @@
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
+import { Maximize2, Minimize2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,6 +39,7 @@ function ApplicationCard({
   resumeUrl,
   questions,
   disabled,
+  expanded,
   onChoose,
 }: {
   side: "A" | "B";
@@ -45,6 +47,7 @@ function ApplicationCard({
   resumeUrl: string | null | undefined;
   questions: Question[];
   disabled: boolean;
+  expanded: boolean;
   onChoose: () => void;
 }) {
   const answers = new Map(
@@ -60,7 +63,9 @@ function ApplicationCard({
         <CardTitle>Application {side}</CardTitle>
       </CardHeader>
       <CardContent className="flex min-h-0 flex-1 flex-col gap-4">
-        <dl className="max-h-[calc(100vh-22rem)] flex-1 space-y-3 overflow-y-auto pr-2">
+        <dl
+          className={`${expanded ? "max-h-[calc(100vh-13rem)]" : "max-h-[calc(100vh-22rem)]"} flex-1 space-y-3 overflow-y-auto pr-2`}
+        >
           <div className="border-b pb-2">
             <dt className="mb-2 text-sm font-semibold">Resume</dt>
             <dd>
@@ -70,7 +75,7 @@ function ApplicationCard({
                 <iframe
                   src={resumeUrl}
                   title={`Application ${side} resume`}
-                  className="h-[32rem] w-full rounded-md border"
+                  className={`${expanded ? "h-[calc(100vh-18rem)] min-h-[32rem]" : "h-[32rem]"} w-full rounded-md border`}
                 />
               ) : (
                 <p className="text-sm text-muted-foreground">
@@ -116,13 +121,39 @@ export default function Rank() {
   const questionsRef = useRef<Question[]>([]);
   const resumeUrlsRef = useRef<(string | null)[]>([]);
   const loadControllerRef = useRef<AbortController | null>(null);
+  const rankPageRef = useRef<HTMLElement>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) navigate("/login");
   }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    if (!isExpanded) return;
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsExpanded(false);
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isExpanded]);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement) setIsExpanded(false);
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    };
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -234,15 +265,55 @@ export default function Rank() {
     }
   }
 
+  async function toggleExpanded() {
+    if (isExpanded) {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      setIsExpanded(false);
+      return;
+    }
+
+    setIsExpanded(true);
+    try {
+      await rankPageRef.current?.requestFullscreen();
+    } catch {
+      // The fixed full-viewport layout remains as a fallback on browsers that
+      // do not allow element fullscreen, including some mobile Safari versions.
+    }
+  }
+
   return (
-      <main className="min-w-0 flex-1 overflow-auto p-4 sm:p-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold">Rank Applications</h1>
-            <p className="mt-2 text-muted-foreground">
-              Review both applications and choose the stronger one. Rankings are
-              shared globally; judge reliability is tracked per admin account.
-            </p>
+      <main
+        ref={rankPageRef}
+        className={`${isExpanded ? "fixed inset-0 z-[100] bg-background" : "min-w-0 flex-1"} overflow-auto p-4 sm:p-8`}
+      >
+        <div
+          className={
+            isExpanded
+              ? "flex min-h-full max-w-none flex-col"
+              : "mx-auto max-w-7xl"
+          }
+        >
+          <div className="mb-6 flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold">Rank Applications</h1>
+              <p className="mt-2 text-muted-foreground">
+                Review both applications and choose the stronger one. Rankings are
+                shared globally; judge reliability is tracked per admin account.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void toggleExpanded()}
+              className="shrink-0 cursor-pointer gap-2"
+            >
+              {isExpanded ? (
+                <Minimize2 className="h-4 w-4" />
+              ) : (
+                <Maximize2 className="h-4 w-4" />
+              )}
+              {isExpanded ? "Exit fullscreen" : "Fullscreen"}
+            </Button>
           </div>
 
           {loading ? (
@@ -255,13 +326,16 @@ export default function Rank() {
               </Button>
             </div>
           ) : pair && details.length === 2 ? (
-            <div className="grid gap-6 lg:grid-cols-2">
+            <div
+              className={`grid gap-6 ${isExpanded ? "min-h-0 flex-1 grid-cols-2" : "lg:grid-cols-2"}`}
+            >
               <ApplicationCard
                 side="A"
                 detail={details[0]}
                 resumeUrl={resumeUrls[0]}
                 questions={questions}
                 disabled={submitting}
+                expanded={isExpanded}
                 onChoose={() => void chooseWinner(pair.left.application_id)}
               />
               <ApplicationCard
@@ -270,6 +344,7 @@ export default function Rank() {
                 resumeUrl={resumeUrls[1]}
                 questions={questions}
                 disabled={submitting}
+                expanded={isExpanded}
                 onChoose={() => void chooseWinner(pair.right.application_id)}
               />
             </div>
