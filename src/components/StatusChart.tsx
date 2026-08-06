@@ -174,18 +174,23 @@ function aggregateApplicants(
   const entries = Array.from(counts.values()).sort(
     (left, right) => right.value - left.value || left.name.localeCompare(right.name),
   );
-  const visible =
-    maxCategories && entries.length > maxCategories
-      ? [
-          ...entries.slice(0, maxCategories - 1),
-          {
-            name: "Other",
-            value: entries
-              .slice(maxCategories - 1)
-              .reduce((sum, entry) => sum + entry.value, 0),
-          },
-        ]
-      : entries;
+  let visible = entries;
+  if (maxCategories && entries.length > maxCategories) {
+    const shown = entries.slice(0, maxCategories - 1);
+    const hiddenTotal = entries
+      .slice(maxCategories - 1)
+      .reduce((sum, entry) => sum + entry.value, 0);
+    const existingOther = shown.find(
+      (entry) => entry.name.toLocaleLowerCase() === "other",
+    );
+
+    if (existingOther) {
+      existingOther.value += hiddenTotal;
+      visible = shown;
+    } else {
+      visible = [...shown, { name: "Other", value: hiddenTotal }];
+    }
+  }
 
   return visible.map((entry, index) => ({
     ...entry,
