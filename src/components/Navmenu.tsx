@@ -37,14 +37,14 @@ function NavMenu() {
   return (
     <>
       {/* Mobile */}
-      <div className="p-1 lg:hidden">
+      <div className="fixed left-5 top-6 z-50 lg:hidden">
         <Sheet>
           <SheetTrigger asChild>
             <Button
               variant="outline"
               size="icon"
               aria-label="Open navigation menu"
-              className="mt-6 ml-5 bg-secondary"
+              className="bg-secondary shadow-sm"
             >
               <Menu className="h-5 w-5" />
             </Button>

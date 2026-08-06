@@ -7,15 +7,17 @@ export function AdminLayout() {
   return (
     <div className="flex h-screen w-full overflow-hidden">
       <NavMenu />
-      <Suspense
-        fallback={
-          <main className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-            Loading…
-          </main>
-        }
-      >
-        <Outlet />
-      </Suspense>
+      <div className="flex min-w-0 flex-1 pt-20 lg:pt-0">
+        <Suspense
+          fallback={
+            <main className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+              Loading…
+            </main>
+          }
+        >
+          <Outlet />
+        </Suspense>
+      </div>
     </div>
   );
 }
