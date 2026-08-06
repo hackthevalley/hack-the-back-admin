@@ -1,5 +1,5 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { useApplicants } from "@/utils/ApplicantsContext";
+import { useApplicants } from "@/utils/useApplicants";
 import { useMemo, useRef } from "react";
 
 const FIELD_BASE: Record<string, number> = {

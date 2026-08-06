@@ -1,5 +1,5 @@
 import { Applicants } from "@/components/Applicants";
-import { useApplicants } from "@/utils/ApplicantsContext";
+import { useApplicants } from "@/utils/useApplicants";
 import NavMenu from "@/components/Navmenu";
 import { UserContext } from "@/utils/auth";
 import { useContext, useEffect, useState } from "react";

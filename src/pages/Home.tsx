@@ -3,7 +3,7 @@ import { UserContext } from "@/utils/auth";
 import { useNavigate } from "react-router";
 import NavMenu from "@/components/Navmenu";
 import StatusChart from "@/components/StatusChart";
-import { useApplicants } from "@/utils/ApplicantsContext";
+import { useApplicants } from "@/utils/useApplicants";
 
 function Home() {
   const { isAuthenticated } = useContext(UserContext) ?? {};
@@ -18,7 +18,7 @@ function Home() {
 
   useEffect(() => {
     refreshApplicants().catch((err) => console.error(err));
-  }, []);
+  }, [refreshApplicants]);
 
   return (
     <div className="flex h-screen gap-16">

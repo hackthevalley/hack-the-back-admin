@@ -1,921 +1,229 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-"use client";
-import { useState, useEffect, Dispatch, SetStateAction } from "react";
-
-// Fix for Radix UI dropdown menu types
-declare module "@radix-ui/react-dropdown-menu" {
-  export interface DropdownMenuTriggerProps {
-    children?: React.ReactNode;
-    asChild?: boolean;
-  }
-  export interface DropdownMenuContentProps {
-    children?: React.ReactNode;
-    align?: "start" | "center" | "end";
-    className?: string;
-  }
-  export interface DropdownMenuItemProps {
-    children?: React.ReactNode;
-    asChild?: boolean;
-    onClick?: () => void;
-  }
-  export interface DropdownMenuLabelProps {
-    children?: React.ReactNode;
-  }
-  export interface DropdownMenuCheckboxItemProps {
-    children?: React.ReactNode;
-    checked?: boolean;
-    onCheckedChange?: (checked: boolean) => void;
-    className?: string;
-  }
-}
-
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import {
-  ColumnDef,
-  ColumnFiltersState,
-  flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getSortedRowModel,
-  SortingState,
   useReactTable,
+} from "@tanstack/react-table";
+import type {
+  ColumnFiltersState,
+  RowSelectionState,
+  SortingState,
   VisibilityState,
 } from "@tanstack/react-table";
-import {
-  ArrowUpDown,
-  ChevronDown,
-  MoreHorizontal,
-  CheckCircle,
-  AlertTriangle,
-  XCircle,
-} from "lucide-react";
-
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import fetchInstance from "@/utils/api";
+import { AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
-enum Status {
-  ACCOUNT_INACTIVE = "ACCOUNT_INACTIVE",
-  NOT_APPLIED = "NOT_APPLIED",
-  APPLYING = "APPLYING",
-  APPLIED = "APPLIED",
-  UNDER_REVIEW = "UNDER_REVIEW",
-  WAITLISTED = "WAITLISTED",
-  ACCEPTED = "ACCEPTED",
-  REJECTED = "REJECTED",
-  ACCEPTED_INVITE = "ACCEPTED_INVITE",
-  REJECTED_INVITE = "REJECTED_INVITE",
-  SCANNED_IN = "SCANNED_IN",
-  WALK_IN = "WALK_IN",
-  WALK_IN_SUBMITTED = "WALK_IN_SUBMITTED",
-}
+import { ApplicantFilters } from "@/components/applicants/ApplicantFilters";
+import { ApplicantTable } from "@/components/applicants/ApplicantTable";
+import { createApplicantColumns } from "@/components/applicants/columns";
+import type { Applicant, ApplicantFilterProps } from "@/components/applicants/types";
+import { ApplicantStatus } from "@/components/applicants/types";
+import { Button } from "@/components/ui/button";
+import fetchInstance from "@/utils/api";
 
-export interface ApplicantProps {
-  first_name: string;
-  last_name: string;
-  email: string;
-  status: string;
-  app_id: string;
-  created_at: string;
-  updated_at: string;
-  age?: string;
-  gender?: string;
-  school?: string;
-  ranking_mu?: number | null;
-  ranking_sigma_sq?: number | null;
-  ranking_comparison_count?: number;
-}
+export type ApplicantProps = Applicant;
 
-export function Applicants({
-  applicants,
-  setOffset,
-  offset,
-  search,
-  setSearch,
-  levelOfStudy,
-  setLevelOfStudy,
-  gender,
-  setGender,
-  utsc,
-  setUTSC,
-  dateSort,
-  setDateSort,
-  role,
-  setRole,
-  rankingSort,
-  setRankingSort,
-}: {
-  applicants?: ApplicantProps[];
-  setOffset: Dispatch<SetStateAction<number>>;
+type ApplicantsProps = ApplicantFilterProps & {
+  applicants?: Applicant[];
   offset: number;
-  search: string;
-  setSearch: Dispatch<SetStateAction<string>>;
-  levelOfStudy: string;
-  setLevelOfStudy: Dispatch<SetStateAction<string>>;
-  gender: string;
-  setGender: Dispatch<SetStateAction<string>>;
-  utsc: string;
-  setUTSC: Dispatch<SetStateAction<string>>;
-  dateSort: string;
-  setDateSort: Dispatch<SetStateAction<string>>;
-  role: string;
-  setRole: Dispatch<SetStateAction<string>>;
-  rankingSort: string;
-  setRankingSort: Dispatch<SetStateAction<string>>;
-}) {
-  const [data, setData] = useState(applicants ?? []);
+  setOffset: Dispatch<SetStateAction<number>>;
+};
+
+const PAGE_SIZE = 25;
+
+export function Applicants({ applicants, offset, setOffset, ...filters }: ApplicantsProps) {
+  const [data, setData] = useState<Applicant[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = useState({});
-  const [searchInput, setSearchInput] = useState(search);
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const genderOptions = [
-    "Male",
-    "Female",
-    "Non-binary",
-    "Other",
-    "Prefer not to say",
-  ];
-  const levelOfStudyOptions = [
-    "High School",
-    "Freshman - Undergraduate",
-    "Sophomore - Undergraduate",
-    "Junior - Undergraduate",
-    "Senior - Undergraduate",
-    "Graduate",
-    "PhD",
-    "Other",
-  ];
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   useEffect(() => {
-    if (applicants) {
-      const processedApplicants = applicants.map((applicant) => ({
-        ...applicant,
-        created_at: convertToDateTime(applicant.created_at),
-        updated_at: convertToDateTime(applicant.updated_at),
-      }));
-      setData(processedApplicants);
-    }
+    setData((applicants ?? []).map(formatApplicantDates));
   }, [applicants]);
 
-  function convertToDateTime(input: string): string {
-    if (!input || input === "unknown" || input === "N/A") {
-      return "N/A";
-    }
-
-    const d = new Date(input);
-    if (isNaN(d.getTime())) {
-      return "Invalid Date";
-    }
-
-    try {
-      const parts = new Intl.DateTimeFormat("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-        timeZone: "America/Toronto",
-      }).formatToParts(d);
-
-      const get = (type: Intl.DateTimeFormatPartTypes) =>
-        parts.find((p) => p.type === type)?.value ?? "";
-
-      const month = get("month");
-      const day = get("day");
-      const year = get("year");
-      const hour = get("hour");
-      const minute = get("minute");
-      const dayPeriod = get("dayPeriod");
-
-      return `${month} ${day}, ${year} ${hour}:${minute}${dayPeriod}`;
-    } catch (error) {
-      console.error("Error formatting date:", input, error);
-      return "Invalid Date";
-    }
-  }
-
-  const updateApplicationStatus = (id: string, newStatus: Status) => {
-    setData((previousData) =>
-      previousData.map((applicant) =>
-        applicant.app_id === id
-          ? {
-              ...applicant,
-              status: newStatus,
-              updated_at: new Date().toISOString(),
-            }
-          : applicant
-      )
-    );
-  };
-
-  const showToast = (action: Status, msg?: string) => {
-    switch (action) {
-      case Status.ACCEPTED:
-        toast.success(`${msg} Applicant(s) accepted`, {
-          icon: <CheckCircle className="text-green-500" />,
-        });
-        break;
-      case Status.WAITLISTED:
-        toast(`${msg} Applicant(s) waitlisted`, {
-          icon: <AlertTriangle className="text-yellow-500" />,
-        });
-        break;
-      case Status.REJECTED:
-        toast.error(`${msg} Applicant(s) rejected`, {
-          icon: <XCircle className="text-red-500" />,
-        });
-        break;
-      default:
-        toast("Status updated");
-    }
-  };
-
-  const handleApplicantAction = async (action: Status, app_id: string) => {
-    try {
-      const res = await fetchInstance(
-        `admin/account/applications/${app_id}/status?request=${action}`,
-        { method: "PATCH" }
+  const updateApplicationStatus = useCallback(
+    (applicationId: string, status: ApplicantStatus) => {
+      setData((current) =>
+        current.map((applicant) =>
+          applicant.app_id === applicationId
+            ? {
+                ...applicant,
+                status,
+                updated_at: formatTorontoDate(new Date().toISOString()),
+              }
+            : applicant,
+        ),
       );
+    },
+    [],
+  );
 
-      if (res.application_id == app_id) {
-        updateApplicationStatus(app_id, action);
-        showToast(action);
-      } else {
-        toast.warning("Action Failed...");
+  const handleApplicantAction = useCallback(
+    async (action: ApplicantStatus, applicationId: string) => {
+      try {
+        const response = await fetchInstance(
+          `admin/account/applications/${applicationId}/status?request=${action}`,
+          { method: "PATCH" },
+        );
+        if (response.application_id !== applicationId) {
+          toast.warning("Action failed");
+          return;
+        }
+        updateApplicationStatus(applicationId, action);
+        showStatusToast(action);
+      } catch {
+        toast.error("An error occurred while updating the applicant status.");
       }
-    } catch {
-      toast.error(
-        "An error occurred while trying update status of applicant..."
-      );
-    }
-  };
+    },
+    [updateApplicationStatus],
+  );
 
-  const columns: ColumnDef<ApplicantProps>[] = [
-    {
-      id: "select",
-      header: ({ table }) => (
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
-          }
-          onCheckedChange={(value: boolean) =>
-            table.toggleAllPageRowsSelected(!!value)
-          }
-          className="border-primary"
-          aria-label="Select all"
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value: boolean) => row.toggleSelected(!!value)}
-          className="border-primary"
-          aria-label="Select row"
-        />
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
-    {
-      accessorKey: "first_name",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            First Name
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => <div className="">{row.getValue("first_name")}</div>,
-    },
-    {
-      accessorKey: "last_name",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Last Name
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => <div className="">{row.getValue("last_name")}</div>,
-    },
-    {
-      accessorKey: "email",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Email
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => (
-        <div className="lowercase">{row.getValue("email")}</div>
-      ),
-    },
-    {
-      accessorKey: "gender",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Gender
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => (
-        <div className="capitalize">{row.getValue("gender") || "N/A"}</div>
-      ),
-    },
-    {
-      accessorKey: "school",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            School
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => (
-        <div className="capitalize">{row.getValue("school") || "N/A"}</div>
-      ),
-    },
-    {
-      accessorKey: "status",
-      header: "Status",
-      cell: ({ row }) => (
-        <div className="capitalize">{row.getValue("status")}</div>
-      ),
-    },
-    {
-      accessorKey: "ranking_mu",
-      header: "Crowd-BT Rating",
-      cell: ({ row }) => {
-        const rating = row.original.ranking_mu;
-        return (
-          <div>
-            <div className="font-medium">
-              {rating == null ? "Unranked" : rating.toFixed(4)}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              {row.original.ranking_comparison_count ?? 0} comparisons
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: "created_at",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Created At
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => <div className="">{row.getValue("created_at")}</div>,
-    },
-    {
-      accessorKey: "updated_at",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Last Updated
-            <ArrowUpDown />
-          </Button>
-        );
-      },
-      cell: ({ row }) => <div className="">{row.getValue("updated_at")}</div>,
-    },
-    {
-      id: "actions",
-      enableHiding: false,
-      cell: ({ row }) => {
-        const applicant = row.original;
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <a
-                  href={`/apps/${applicant.app_id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  View Applicant
-                </a>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() =>
-                  handleApplicantAction(Status.ACCEPTED, applicant.app_id)
-                }
-              >
-                Accept Applicant
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() =>
-                  handleApplicantAction(Status.WAITLISTED, applicant.app_id)
-                }
-              >
-                Waitlist Applicant
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() =>
-                  handleApplicantAction(Status.REJECTED, applicant.app_id)
-                }
-              >
-                Reject Applicant
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) as any;
-      },
-    },
-  ];
+  const columns = useMemo(
+    () => createApplicantColumns(handleApplicantAction),
+    [handleApplicantAction],
+  );
 
   const table = useReactTable({
     data,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
+    onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-    },
+    state: { sorting, columnFilters, columnVisibility, rowSelection },
   });
 
-  const handleBulkAction = async (action: Status) => {
-    const selectedRows = table
+  const handleBulkAction = async (action: ApplicantStatus) => {
+    const selectedApplicants = table
       .getSelectedRowModel()
       .rows.map((row) => row.original);
     try {
       await Promise.all(
-        selectedRows.map((applicant) =>
-          fetchInstance(
+        selectedApplicants.map(async (applicant) => {
+          const response = await fetchInstance(
             `admin/account/applications/${applicant.app_id}/status?request=${action}`,
-            { method: "PATCH" }
-          ).then((res) => {
-            if (res.application_id === applicant.app_id) {
-              updateApplicationStatus(applicant.app_id, action);
-            }
-          })
-        )
+            { method: "PATCH" },
+          );
+          if (response.application_id === applicant.app_id) {
+            updateApplicationStatus(applicant.app_id, action);
+          }
+        }),
       );
-      showToast(action, `${selectedRows.length}`);
+      showStatusToast(action, selectedApplicants.length);
       setRowSelection({});
     } catch {
-      toast.error("An error occurred while performing bulk action");
+      toast.error("An error occurred while performing the bulk action.");
     }
   };
 
+  const selectedCount = Object.keys(rowSelection).length;
+
   return (
     <div className="w-full py-4 px-4 sm:px-6">
-      <div className="flex flex-col gap-4 py-4">
-        {/* Search and basic filters row */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-wrap">
-          <Input
-            placeholder="Search"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                setSearch(searchInput);
-                setOffset(0);
-              }
-            }}
-            className="w-full sm:max-w-xs"
-          />
-          <Button
-            variant="default"
-            onClick={() => {
-              setSearch(searchInput);
-              setOffset(0);
-            }}
-            className="w-full sm:w-auto"
-          >
-            Search
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => setShowAdvanced((prev) => !prev)}
-            className="w-full sm:w-auto"
-          >
-            {showAdvanced ? "Hide Advanced" : "Advanced Filters"}
-          </Button>
-          {/* Date Sort dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full sm:w-auto sm:min-w-[150px] justify-between"
-              >
-                {dateSort === "oldest"
-                  ? "Oldest First"
-                  : dateSort === "latest"
-                  ? "Latest First"
-                  : "Sort by Date"}
-                <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-[150px]">
-              <DropdownMenuItem onClick={() => setDateSort("")}>
-                No Date Sort
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => {
-                  setDateSort("oldest");
-                  setRankingSort("");
-                }}
-              >
-                Oldest First
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  setDateSort("latest");
-                  setRankingSort("");
-                }}
-              >
-                Latest First
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full sm:w-auto sm:min-w-[170px] justify-between"
-              >
-                {rankingSort === "highest"
-                  ? "Highest Rated"
-                  : rankingSort === "lowest"
-                    ? "Lowest Rated"
-                    : "Sort by Rating"}
-                <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-[170px]">
-              <DropdownMenuItem onClick={() => setRankingSort("")}>
-                No Rating Sort
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => {
-                  setRankingSort("highest");
-                  setDateSort("");
-                }}
-              >
-                Highest Rated
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  setRankingSort("lowest");
-                  setDateSort("");
-                }}
-              >
-                Lowest Rated
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          {/* Role filter dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full sm:w-auto sm:min-w-[150px] justify-between"
-              >
-                {role ? role.replace(/_/g, " ") : "Filter by Status"}
-                <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-[200px]">
-              <DropdownMenuItem onClick={() => setRole("")}>
-                All Statuses
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              {Object.values(Status).map((statusValue) => (
-                <DropdownMenuItem
-                  key={statusValue}
-                  onClick={() => setRole(statusValue)}
-                >
-                  {statusValue.replace(/_/g, " ")}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="w-full sm:w-auto">
-                Columns <ChevronDown />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value: boolean) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        {/* Bulk actions row */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-          <Button
-            variant="success"
-            disabled={Object.keys(rowSelection).length === 0}
-            onClick={() => handleBulkAction(Status.ACCEPTED)}
-            className="w-full sm:w-auto"
-          >
-            Accept Selected
-          </Button>
-          <Button
-            variant="destructive"
-            disabled={Object.keys(rowSelection).length === 0}
-            onClick={() => handleBulkAction(Status.REJECTED)}
-            className="w-full sm:w-auto"
-          >
-            Reject Selected
-          </Button>
-          <Button
-            variant="default"
-            disabled={Object.keys(rowSelection).length === 0}
-            onClick={() => handleBulkAction(Status.WAITLISTED)}
-            className="w-full sm:w-auto"
-          >
-            Waitlist Selected
-          </Button>
-        </div>
+      <ApplicantFilters
+        table={table}
+        setOffset={setOffset}
+        {...filters}
+      />
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 py-4">
+        <BulkActionButton
+          label="Accept Selected"
+          variant="success"
+          disabled={!selectedCount}
+          onClick={() => handleBulkAction(ApplicantStatus.ACCEPTED)}
+        />
+        <BulkActionButton
+          label="Reject Selected"
+          variant="destructive"
+          disabled={!selectedCount}
+          onClick={() => handleBulkAction(ApplicantStatus.REJECTED)}
+        />
+        <BulkActionButton
+          label="Waitlist Selected"
+          variant="default"
+          disabled={!selectedCount}
+          onClick={() => handleBulkAction(ApplicantStatus.WAITLISTED)}
+        />
       </div>
-      {showAdvanced && (
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center py-2 gap-2">
-          {/* Level of Study dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full sm:w-auto sm:min-w-[200px] justify-between"
-              >
-                {levelOfStudy || "All Study Levels"}
-                <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-[250px]">
-              <DropdownMenuItem onClick={() => setLevelOfStudy("")}>
-                All Study Levels
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              {levelOfStudyOptions.map((opt) => (
-                <DropdownMenuItem
-                  key={opt}
-                  onClick={() => setLevelOfStudy(opt)}
-                >
-                  {opt}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* UTSC dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full sm:w-auto sm:min-w-[150px] justify-between"
-              >
-                {utsc == "University of Toronto (Scarborough)"
-                  ? "UTSC Only"
-                  : "All Schools"}
-                <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-[150px]">
-              <DropdownMenuItem onClick={() => setUTSC("")}>
-                All Schools
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => setUTSC("University of Toronto (Scarborough)")}
-              >
-                UTSC Only
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Gender dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full sm:w-auto sm:min-w-[150px] justify-between"
-              >
-                {gender || "All Genders"}
-                <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-[150px]">
-              <DropdownMenuItem onClick={() => setGender("")}>
-                All Genders
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              {genderOptions.map((opt) => (
-                <DropdownMenuItem key={opt} onClick={() => setGender(opt)}>
-                  {opt}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <Button
-            variant="outline"
-            onClick={() => {
-              setSearch("");
-              setSearchInput("");
-              setLevelOfStudy("");
-              setGender("");
-              setUTSC("");
-              setDateSort("");
-              setRole("");
-              setRankingSort("");
-              setOffset(0);
-            }}
-            className="w-full sm:w-auto"
-          >
-            Clear Filters
-          </Button>
-        </div>
-      )}
-      <div className="overflow-x-auto rounded-md border-1 border-black p-2">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead
-                      key={header.id}
-                      className={
-                        header.id === "actions"
-                          ? "sticky right-0 bg-background shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.1)]"
-                          : ""
-                      }
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className={
-                        cell.column.id === "actions"
-                          ? "sticky right-0 bg-background shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.1)]"
-                          : ""
-                      }
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="text-muted-foreground flex-1 text-sm">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              setOffset((prev) => {
-                const next = Math.max(0, prev - 25);
-                return next;
-              })
-            }
-            disabled={offset === 0}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              setOffset((prev) => {
-                const next = prev + 25;
-                return next;
-              })
-            }
-            disabled={data.length < 25}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
+      <ApplicantTable
+        table={table}
+        columnCount={columns.length}
+        offset={offset}
+        setOffset={setOffset}
+        pageSize={PAGE_SIZE}
+        resultCount={data.length}
+      />
     </div>
-  ) as any;
+  );
+}
+
+function BulkActionButton({
+  label,
+  variant,
+  disabled,
+  onClick,
+}: {
+  label: string;
+  variant: "default" | "destructive" | "success";
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <Button
+      variant={variant}
+      disabled={disabled}
+      onClick={onClick}
+      className="w-full sm:w-auto"
+    >
+      {label}
+    </Button>
+  );
+}
+
+function formatApplicantDates(applicant: Applicant): Applicant {
+  return {
+    ...applicant,
+    created_at: formatTorontoDate(applicant.created_at),
+    updated_at: formatTorontoDate(applicant.updated_at),
+  };
+}
+
+function formatTorontoDate(input: string): string {
+  if (!input || input === "unknown" || input === "N/A") return "N/A";
+  const date = new Date(input);
+  if (Number.isNaN(date.getTime())) return "Invalid Date";
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "America/Toronto",
+  }).format(date);
+}
+
+function showStatusToast(action: ApplicantStatus, count?: number) {
+  const subject = count === undefined ? "Applicant" : `${count} applicant(s)`;
+  if (action === ApplicantStatus.ACCEPTED) {
+    toast.success(`${subject} accepted`, {
+      icon: <CheckCircle className="text-green-500" />,
+    });
+  } else if (action === ApplicantStatus.WAITLISTED) {
+    toast(`${subject} waitlisted`, {
+      icon: <AlertTriangle className="text-yellow-500" />,
+    });
+  } else if (action === ApplicantStatus.REJECTED) {
+    toast.error(`${subject} rejected`, {
+      icon: <XCircle className="text-red-500" />,
+    });
+  } else {
+    toast("Status updated");
+  }
 }
