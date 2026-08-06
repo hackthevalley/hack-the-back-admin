@@ -72,7 +72,6 @@ export default function ViewApplicant() {
     })
       .then((applicationData) => {
         setApplicant(applicationData);
-        console.log(applicant);
       })
       .catch(() => setError("Failed to fetch applicant"));
   }, [app_id]);

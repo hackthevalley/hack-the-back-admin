@@ -39,8 +39,12 @@ function Login() {
       } else {
         toast.error("Invalid credentials. Please try again.");
       }
-    } catch (err: any) {
-      toast.error(err?.message || "Something went wrong while logging in.");
+    } catch (error: unknown) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong while logging in.",
+      );
     }
   };
 

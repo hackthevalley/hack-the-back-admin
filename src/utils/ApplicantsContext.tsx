@@ -1,120 +1,111 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-  useCallback,
-} from "react";
+import { useCallback, useState } from "react";
+import type { ReactNode } from "react";
+
 import fetchInstance from "@/utils/api";
 
-export type ApplicantProps = {
-  first_name: string;
-  last_name: string;
-  email: string;
-  status: string;
-  app_id: string;
-  created_at: string;
-  updated_at: string;
-  age?: string;
-  gender?: string;
-  school?: string;
-  role?: string;
-  ranking_mu?: number | null;
-  ranking_sigma_sq?: number | null;
-  ranking_comparison_count?: number;
-};
-
-export type ApplicantsQueryParams = {
-  offset?: number;
-  limit?: number;
-  search?: string;
-  level_of_study?: string;
-  gender?: string;
-  school?: string;
-  dateSort?: string;
-  role?: string;
-  rankingSort?: string;
-};
+import { ApplicantsContext } from "./applicants-context";
+import type {
+  ApplicantProps,
+  ApplicantsQueryParams,
+} from "./applicants-context";
 
 type ApplicantsApiResponse = {
   application: ApplicantProps[];
 };
 
-type ApplicantsContextType = {
-  applicants: ApplicantProps[];
-  refreshApplicants: (params?: ApplicantsQueryParams) => Promise<void>;
-};
-
-const ApplicantsContext = createContext<ApplicantsContextType | undefined>(
-  undefined
-);
-
 export function ApplicantsProvider({ children }: { children: ReactNode }) {
   const [applicants, setApplicants] = useState<ApplicantProps[]>([]);
+  const [isLoadingApplicants, setIsLoadingApplicants] = useState(false);
+
+  const fetchApplicantPage = useCallback(
+    async (params?: ApplicantsQueryParams): Promise<ApplicantProps[]> => {
+      const queryParams = new URLSearchParams({
+        ofs: String(params?.offset ?? 0),
+        limit: String(params?.limit ?? 25),
+      });
+      if (params?.search) queryParams.set("search", params.search);
+      if (params?.level_of_study) {
+        queryParams.set("level_of_study", params.level_of_study);
+      }
+      if (params?.gender) queryParams.set("gender", params.gender);
+      if (params?.school) queryParams.set("school", params.school);
+      if (params?.dateSort) queryParams.set("date_sort", params.dateSort);
+      if (params?.role) queryParams.set("role", params.role);
+      if (params?.rankingSort) {
+        queryParams.set("ranking_sort", params.rankingSort);
+      }
+
+      const data: ApplicantsApiResponse = await fetchInstance(
+        `admin/account/applications?${queryParams.toString()}`,
+        { method: "GET" },
+      );
+      return data.application.map(normalizeApplicant);
+    },
+    [],
+  );
 
   const refreshApplicants = useCallback(
     async (params?: ApplicantsQueryParams) => {
+      setIsLoadingApplicants(true);
       try {
-        const queryParams = new URLSearchParams();
-        queryParams.append("ofs", (params?.offset ?? 0).toString());
-        queryParams.append("limit", (params?.limit ?? 25).toString());
-
-        if (params?.search) queryParams.append("search", params.search);
-        if (params?.level_of_study)
-          queryParams.append("level_of_study", params.level_of_study);
-        if (params?.gender) queryParams.append("gender", params.gender);
-        if (params?.school) queryParams.append("school", params.school);
-        if (params?.dateSort) queryParams.append("date_sort", params.dateSort);
-        if (params?.role) queryParams.append("role", params.role);
-        if (params?.rankingSort)
-          queryParams.append("ranking_sort", params.rankingSort);
-
-        const data: ApplicantsApiResponse = await fetchInstance(
-          `admin/account/applications?${queryParams.toString()}`,
-          {
-            method: "GET",
-          }
-        );
-
-        setApplicants(
-          data.application.map((app) => ({
-            first_name: app.first_name,
-            last_name: app.last_name,
-            email: app.email ?? "",
-            status: app.status ?? "unknown",
-            app_id: app.app_id ?? "unknown",
-            created_at: app.created_at ?? "unknown",
-            updated_at: app.updated_at ?? "unknown",
-            age: app.age ?? "unknown",
-            gender: app.gender ?? "unknown",
-            school: app.school ?? "unknown",
-            ranking_mu: app.ranking_mu,
-            ranking_sigma_sq: app.ranking_sigma_sq,
-            ranking_comparison_count: app.ranking_comparison_count ?? 0,
-          }))
-        );
+        setApplicants(await fetchApplicantPage(params));
       } catch (error) {
         console.error("Error fetching applicants:", error);
+      } finally {
+        setIsLoadingApplicants(false);
       }
     },
-    []
+    [fetchApplicantPage],
   );
 
-  useEffect(() => {
-    refreshApplicants();
-  }, [refreshApplicants]);
+  const refreshAllApplicants = useCallback(async () => {
+    const pageSize = 100;
+    setIsLoadingApplicants(true);
+    try {
+      const allApplicants: ApplicantProps[] = [];
+      for (let offset = 0; ; offset += pageSize) {
+        const page = await fetchApplicantPage({ offset, limit: pageSize });
+        allApplicants.push(...page);
+        if (page.length < pageSize) break;
+      }
+      setApplicants(
+        Array.from(
+          new Map(allApplicants.map((applicant) => [applicant.app_id, applicant])).values(),
+        ),
+      );
+    } catch (error) {
+      console.error("Error fetching all applicants:", error);
+    } finally {
+      setIsLoadingApplicants(false);
+    }
+  }, [fetchApplicantPage]);
 
   return (
-    <ApplicantsContext.Provider value={{ applicants, refreshApplicants }}>
+    <ApplicantsContext.Provider
+      value={{
+        applicants,
+        isLoadingApplicants,
+        refreshApplicants,
+        refreshAllApplicants,
+      }}
+    >
       {children}
     </ApplicantsContext.Provider>
   );
 }
 
-export function useApplicants() {
-  const ctx = useContext(ApplicantsContext);
-  if (!ctx)
-    throw new Error("useApplicants must be used within ApplicantsProvider");
-  return ctx;
+function normalizeApplicant(applicant: ApplicantProps): ApplicantProps {
+  return {
+    ...applicant,
+    email: applicant.email ?? "",
+    status: applicant.status ?? "unknown",
+    app_id: applicant.app_id ?? "unknown",
+    created_at: applicant.created_at ?? "unknown",
+    updated_at: applicant.updated_at ?? "unknown",
+    age: applicant.age ?? "unknown",
+    gender: applicant.gender ?? "unknown",
+    school: applicant.school ?? "unknown",
+    level_of_study: applicant.level_of_study ?? "unknown",
+    ranking_comparison_count: applicant.ranking_comparison_count ?? 0,
+  };
 }

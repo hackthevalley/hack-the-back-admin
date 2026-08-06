@@ -27,7 +27,7 @@ const fetchInstance = async (
   const response = await fetch(`${API_BASE_URL}/${endpoint}`, config);
 
   if (!response.ok) {
-    let errorMessage = "Something went wrong";
+    let errorMessage: string;
 
     try {
       const errorData = await response.json();
@@ -36,8 +36,8 @@ const fetchInstance = async (
         errorData.detail || // FastAPI/Django often use "detail"
         JSON.stringify(errorData);
     } catch {
-      // fallback if not JSON
-      errorMessage = await response.text();
+      errorMessage =
+        (await response.text()) || `Request failed with status ${response.status}`;
     }
 
     throw new Error(errorMessage);

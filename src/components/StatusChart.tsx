@@ -1,95 +1,209 @@
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { useApplicants } from "@/utils/ApplicantsContext";
-import { useMemo, useRef } from "react";
+import { useMemo } from "react";
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
-const FIELD_BASE: Record<string, number> = {
-  status: 190, // cyan
-  school: 120, // green
-  age: 30, // orange
-  gender: 280, // purple
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { ApplicantProps } from "@/utils/applicants-context";
+import { useApplicants } from "@/utils/useApplicants";
+
+const DISTINCT_COLORS = [
+  "#2563EB",
+  "#DC2626",
+  "#16A34A",
+  "#EA580C",
+  "#9333EA",
+  "#0891B2",
+  "#DB2777",
+  "#65A30D",
+  "#4F46E5",
+  "#D97706",
+  "#0D9488",
+  "#7C3AED",
+];
+
+type ChartField = keyof Pick<
+  ApplicantProps,
+  "gender" | "level_of_study" | "school" | "status"
+>;
+
+type ChartDatum = {
+  name: string;
+  value: number;
+  color: string;
 };
 
-type StatusChartProps = {
-  title: string;
-  field: keyof {
-    status: string;
-    school: string;
-    age: string;
-    gender: string;
-  };
-  formatter?: (label: string) => string;
-};
-
-function generateShade(baseHue: number, index: number, total: number) {
-  const lightness = 35 + (index / Math.max(total - 1, 1)) * 30;
-  const saturation = 65;
-  return `hsl(${baseHue}, ${saturation}%, ${lightness}%)`;
-}
 export default function StatusChart({
   title,
   field,
-  formatter,
-}: StatusChartProps) {
-  const { applicants } = useApplicants();
-
-  const colorMapRef = useRef<Record<string, string>>({});
-
-  const data = useMemo(() => {
-    const counts: Record<string, number> = {};
-    applicants.forEach((a) => {
-      const key = (a[field] ?? "unknown") as string;
-      counts[key] = (counts[key] || 0) + 1;
-    });
-
-    const entries = Object.entries(counts);
-    const total = entries.length;
-    const baseHue = FIELD_BASE[field] ?? 200;
-
-    return entries.map(([name, value], index) => {
-      if (!colorMapRef.current[name]) {
-        colorMapRef.current[name] = generateShade(baseHue, index, total);
-      }
-      return {
-        name: formatter ? formatter(name) : name,
-        value,
-        color: colorMapRef.current[name],
-      };
-    });
-  }, [applicants, field, formatter]);
+  maxCategories,
+}: {
+  title: string;
+  field: ChartField;
+  maxCategories?: number;
+}) {
+  const { applicants, isLoadingApplicants } = useApplicants();
+  const data = useMemo(
+    () => aggregateApplicants(applicants, field, maxCategories),
+    [applicants, field, maxCategories],
+  );
+  const total = data.reduce((sum, entry) => sum + entry.value, 0);
 
   return (
-    <div className="flex flex-col items-center w-full h-70">
-      <h2 className="mb-2 font-semibold">{title}</h2>
-      {data.length === 0 ? (
-        <span className="text-gray-400">No data</span>
-      ) : (
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              labelLine={false}
-              outerRadius={100}
-              dataKey="value"
-              nameKey="name"
-              stroke="none"
-              label={({
-                percent,
-              }: {
-                name?: string;
-                value?: number;
-                percent?: number;
-              }) => `${((percent ?? 0) * 100).toFixed(0)}%`}
-            >
+    <Card className="min-w-0 overflow-hidden">
+      <CardHeader className="pb-2">
+        <div className="flex items-baseline justify-between gap-4">
+          <CardTitle className="text-lg">{title}</CardTitle>
+          <span className="shrink-0 text-sm text-muted-foreground">
+            {total.toLocaleString()} total
+          </span>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-2">
+        {isLoadingApplicants ? (
+          <div className="flex h-72 items-center justify-center text-sm text-muted-foreground">
+            Loading chart…
+          </div>
+        ) : data.length === 0 ? (
+          <div className="flex h-72 items-center justify-center text-sm text-muted-foreground">
+            No applicant data
+          </div>
+        ) : (
+          <div className="grid min-w-0 grid-cols-1 items-center gap-4 xl:grid-cols-[minmax(220px,1fr)_minmax(180px,0.8fr)]">
+            <div className="h-72 min-w-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+                  <Pie
+                    data={data}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius="48%"
+                    outerRadius="78%"
+                    paddingAngle={1}
+                    stroke="hsl(var(--card))"
+                    strokeWidth={2}
+                  >
+                    {data.map((entry) => (
+                      <Cell key={entry.name} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value, name) => [
+                      Number(value ?? 0).toLocaleString(),
+                      String(name),
+                    ]}
+                    contentStyle={{
+                      borderRadius: "0.5rem",
+                      borderColor: "hsl(var(--border))",
+                      background: "hsl(var(--popover))",
+                      color: "hsl(var(--popover-foreground))",
+                    }}
+                    labelStyle={{
+                      color: "hsl(var(--popover-foreground))",
+                      fontWeight: 600,
+                    }}
+                    itemStyle={{
+                      color: "hsl(var(--popover-foreground))",
+                    }}
+                  />
+                  <text
+                    x="50%"
+                    y="48%"
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    className="fill-foreground text-2xl font-semibold"
+                  >
+                    {total.toLocaleString()}
+                  </text>
+                  <text
+                    x="50%"
+                    y="58%"
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    className="fill-muted-foreground text-xs"
+                  >
+                    applicants
+                  </text>
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            <ul className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-1">
               {data.map((entry) => (
-                <Cell key={`cell-${entry.name}`} fill={entry.color} />
+                <li
+                  key={entry.name}
+                  className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 text-sm"
+                >
+                  <span
+                    className="h-3 w-3 rounded-sm"
+                    style={{ backgroundColor: entry.color }}
+                    aria-hidden="true"
+                  />
+                  <span className="truncate" title={entry.name}>
+                    {entry.name}
+                  </span>
+                  <span className="tabular-nums text-muted-foreground">
+                    {entry.value} ({Math.round((entry.value / total) * 100)}%)
+                  </span>
+                </li>
               ))}
-            </Pie>
-            <Tooltip formatter={(value, name) => [value ?? 0, name]} />
-          </PieChart>
-        </ResponsiveContainer>
-      )}
-    </div>
+            </ul>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
+}
+
+function aggregateApplicants(
+  applicants: ApplicantProps[],
+  field: ChartField,
+  maxCategories?: number,
+): ChartDatum[] {
+  const counts = new Map<string, { name: string; value: number }>();
+  for (const applicant of applicants) {
+    const label = normalizeLabel(applicant[field], field);
+    const key = label.toLocaleLowerCase();
+    const existing = counts.get(key);
+    counts.set(key, {
+      name: existing?.name ?? label,
+      value: (existing?.value ?? 0) + 1,
+    });
+  }
+
+  const entries = Array.from(counts.values()).sort(
+    (left, right) => right.value - left.value || left.name.localeCompare(right.name),
+  );
+  const visible =
+    maxCategories && entries.length > maxCategories
+      ? [
+          ...entries.slice(0, maxCategories - 1),
+          {
+            name: "Other",
+            value: entries
+              .slice(maxCategories - 1)
+              .reduce((sum, entry) => sum + entry.value, 0),
+          },
+        ]
+      : entries;
+
+  return visible.map((entry, index) => ({
+    ...entry,
+    color: DISTINCT_COLORS[index % DISTINCT_COLORS.length],
+  }));
+}
+
+function normalizeLabel(value: string | undefined, field: ChartField): string {
+  const normalized = value?.trim();
+  if (!normalized || ["unknown", "n/a", "null"].includes(normalized.toLowerCase())) {
+    return "Unknown";
+  }
+  if (field === "status") {
+    return normalized
+      .toLowerCase()
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  }
+  return normalized;
 }
