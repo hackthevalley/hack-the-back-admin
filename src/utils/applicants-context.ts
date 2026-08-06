@@ -11,6 +11,7 @@ export type ApplicantProps = {
   age?: string;
   gender?: string;
   school?: string;
+  level_of_study?: string;
   role?: string;
   ranking_mu?: number | null;
   ranking_sigma_sq?: number | null;
@@ -31,7 +32,9 @@ export type ApplicantsQueryParams = {
 
 export type ApplicantsContextValue = {
   applicants: ApplicantProps[];
+  isLoadingApplicants: boolean;
   refreshApplicants: (params?: ApplicantsQueryParams) => Promise<void>;
+  refreshAllApplicants: () => Promise<void>;
 };
 
 export const ApplicantsContext = createContext<ApplicantsContextValue | undefined>(
