@@ -94,7 +94,7 @@ function ApplicationCard({
           size="lg"
           disabled={disabled}
           onClick={onChoose}
-          className="cursor-pointer transition-[transform,box-shadow,background-color] duration-150 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-[0.98] disabled:pointer-events-auto disabled:cursor-wait disabled:hover:translate-y-0 disabled:hover:shadow-none disabled:active:scale-100"
+          className="cursor-pointer transition-[box-shadow,background-color,opacity] duration-150 hover:shadow-md active:opacity-80 disabled:pointer-events-auto disabled:cursor-wait disabled:hover:shadow-none"
         >
           {disabled ? "Recording choice…" : `Choose application ${side}`}
         </Button>
