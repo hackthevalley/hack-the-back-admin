@@ -22,14 +22,6 @@ type ApplicationDetail = {
   form_answers: Answer[];
   form_answersfile: string | null;
 };
-type ExperienceCompany = {
-  name: string;
-  confidence: number;
-  source_text: string;
-  page: number;
-};
-type ResumeExperience = { companies: ExperienceCompany[] };
-
 const HIDDEN_QUESTION_LABELS = new Set([
   "first name",
   "last name",
@@ -44,14 +36,14 @@ const HIDDEN_QUESTION_LABELS = new Set([
 function ApplicationCard({
   side,
   detail,
-  experience,
+  resumeUrl,
   questions,
   disabled,
   onChoose,
 }: {
   side: "A" | "B";
   detail: ApplicationDetail;
-  experience: ResumeExperience;
+  resumeUrl: string | null;
   questions: Question[];
   disabled: boolean;
   onChoose: () => void;
@@ -71,18 +63,18 @@ function ApplicationCard({
       <CardContent className="flex min-h-0 flex-1 flex-col gap-4">
         <dl className="max-h-[calc(100vh-22rem)] flex-1 space-y-3 overflow-y-auto pr-2">
           <div className="border-b pb-2">
-            <dt className="text-sm font-semibold">Experience</dt>
-            <dd className="text-sm text-muted-foreground">
-              {experience.companies.length > 0 ? (
-                <ul className="list-inside list-disc">
-                  {experience.companies.map((company) => (
-                    <li key={`${company.name}-${company.page}`}>
-                      {company.name}
-                    </li>
-                  ))}
-                </ul>
+            <dt className="mb-2 text-sm font-semibold">Resume</dt>
+            <dd>
+              {resumeUrl ? (
+                <iframe
+                  src={resumeUrl}
+                  title={`Application ${side} resume`}
+                  className="h-[32rem] w-full rounded-md border"
+                />
               ) : (
-                "No companies detected"
+                <p className="text-sm text-muted-foreground">
+                  Resume unavailable
+                </p>
               )}
             </dd>
           </div>
@@ -111,7 +103,7 @@ export default function Rank() {
   const navigate = useNavigate();
   const [pair, setPair] = useState<Pair | null>(null);
   const [details, setDetails] = useState<ApplicationDetail[]>([]);
-  const [experience, setExperience] = useState<ResumeExperience[]>([]);
+  const [resumeUrls, setResumeUrls] = useState<(string | null)[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const questionsRef = useRef<Question[]>([]);
   const [loading, setLoading] = useState(true);
@@ -122,22 +114,33 @@ export default function Rank() {
     if (!isAuthenticated) navigate("/login");
   }, [isAuthenticated, navigate]);
 
+  useEffect(
+    () => () => {
+      resumeUrls.forEach((url) => {
+        if (url) URL.revokeObjectURL(url);
+      });
+    },
+    [resumeUrls],
+  );
+
   const loadPair = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const nextPair: Pair = await fetchInstance("admin/judging/pair");
-      const emptyExperience: ResumeExperience = { companies: [] };
-      const loadExperience = async (applicationId: string) => {
+      const loadResume = async (applicationId: string) => {
         try {
-          return await fetchInstance(
-            `admin/account/applications/${applicationId}/resume-experience`,
+          const blob = await fetchInstance(
+            `admin/account/applications/${applicationId}/resume`,
+            { method: "GET" },
+            "blob",
           );
+          return URL.createObjectURL(blob);
         } catch {
-          return emptyExperience;
+          return null;
         }
       };
-      const [left, right, leftExperience, rightExperience, questionData] =
+      const [left, right, leftResumeUrl, rightResumeUrl, questionData] =
         await Promise.all([
           fetchInstance(
             `admin/account/applications/${nextPair.left.application_id}`,
@@ -145,21 +148,21 @@ export default function Rank() {
           fetchInstance(
             `admin/account/applications/${nextPair.right.application_id}`,
           ),
-          loadExperience(nextPair.left.application_id),
-          loadExperience(nextPair.right.application_id),
+          loadResume(nextPair.left.application_id),
+          loadResume(nextPair.right.application_id),
           questionsRef.current.length > 0
             ? Promise.resolve(questionsRef.current)
             : fetchInstance("forms/questions"),
         ]);
       setPair(nextPair);
       setDetails([left, right]);
-      setExperience([leftExperience, rightExperience]);
+      setResumeUrls([leftResumeUrl, rightResumeUrl]);
       setQuestions(questionData);
       questionsRef.current = questionData;
     } catch (caught) {
       setPair(null);
       setDetails([]);
-      setExperience([]);
+      setResumeUrls([]);
       setError(caught instanceof Error ? caught.message : "Unable to load a pair");
     } finally {
       setLoading(false);
@@ -214,12 +217,12 @@ export default function Rank() {
                 Try again
               </Button>
             </div>
-          ) : pair && details.length === 2 && experience.length === 2 ? (
+          ) : pair && details.length === 2 && resumeUrls.length === 2 ? (
             <div className="grid gap-6 lg:grid-cols-2">
               <ApplicationCard
                 side="A"
                 detail={details[0]}
-                experience={experience[0]}
+                resumeUrl={resumeUrls[0]}
                 questions={questions}
                 disabled={submitting}
                 onChoose={() => void chooseWinner(pair.left.application_id)}
@@ -227,7 +230,7 @@ export default function Rank() {
               <ApplicationCard
                 side="B"
                 detail={details[1]}
-                experience={experience[1]}
+                resumeUrl={resumeUrls[1]}
                 questions={questions}
                 disabled={submitting}
                 onChoose={() => void chooseWinner(pair.right.application_id)}
