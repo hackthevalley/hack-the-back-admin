@@ -1,7 +1,6 @@
 import { useContext, useEffect } from "react";
 import { UserContext } from "@/utils/auth";
 import { useNavigate } from "react-router";
-import NavMenu from "@/components/Navmenu";
 import StatusChart from "@/components/StatusChart";
 import { useApplicants } from "@/utils/useApplicants";
 
@@ -21,8 +20,6 @@ function Home() {
   }, [refreshAllApplicants]);
 
   return (
-    <div className="flex min-h-screen w-full overflow-hidden">
-      <NavMenu />
       <main className="min-w-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">
         <header className="mb-6">
           <h1 className="text-2xl font-semibold tracking-tight">Applicant overview</h1>
@@ -45,7 +42,6 @@ function Home() {
           <StatusChart title="Applicants by Gender" field="gender" />
         </div>
       </main>
-    </div>
   );
 }
 

@@ -1,7 +1,6 @@
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
-import NavMenu from "@/components/Navmenu";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import fetchInstance from "@/utils/api";
@@ -43,7 +42,7 @@ function ApplicationCard({
 }: {
   side: "A" | "B";
   detail: ApplicationDetail;
-  resumeUrl: string | null;
+  resumeUrl: string | null | undefined;
   questions: Question[];
   disabled: boolean;
   onChoose: () => void;
@@ -65,7 +64,9 @@ function ApplicationCard({
           <div className="border-b pb-2">
             <dt className="mb-2 text-sm font-semibold">Resume</dt>
             <dd>
-              {resumeUrl ? (
+              {resumeUrl === undefined ? (
+                <p className="text-sm text-muted-foreground">Loading resume…</p>
+              ) : resumeUrl ? (
                 <iframe
                   src={resumeUrl}
                   title={`Application ${side} resume`}
@@ -108,9 +109,13 @@ export default function Rank() {
   const navigate = useNavigate();
   const [pair, setPair] = useState<Pair | null>(null);
   const [details, setDetails] = useState<ApplicationDetail[]>([]);
-  const [resumeUrls, setResumeUrls] = useState<(string | null)[]>([]);
+  const [resumeUrls, setResumeUrls] = useState<
+    [string | null | undefined, string | null | undefined]
+  >([undefined, undefined]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const questionsRef = useRef<Question[]>([]);
+  const resumeUrlsRef = useRef<(string | null)[]>([]);
+  const loadControllerRef = useRef<AbortController | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -119,58 +124,87 @@ export default function Rank() {
     if (!isAuthenticated) navigate("/login");
   }, [isAuthenticated, navigate]);
 
-  useEffect(
-    () => () => {
-      resumeUrls.forEach((url) => {
+  useEffect(() => {
+    return () => {
+      loadControllerRef.current?.abort();
+      resumeUrlsRef.current.forEach((url) => {
         if (url) URL.revokeObjectURL(url);
       });
-    },
-    [resumeUrls],
-  );
+    };
+  }, []);
 
   const loadPair = useCallback(async () => {
+    loadControllerRef.current?.abort();
+    resumeUrlsRef.current.forEach((url) => {
+      if (url) URL.revokeObjectURL(url);
+    });
+    resumeUrlsRef.current = [];
+
+    const controller = new AbortController();
+    loadControllerRef.current = controller;
     setLoading(true);
     setError(null);
+    setResumeUrls([undefined, undefined]);
     try {
-      const nextPair: Pair = await fetchInstance("admin/judging/pair");
-      const loadResume = async (applicationId: string) => {
+      const nextPair: Pair = await fetchInstance("admin/judging/pair", {
+        signal: controller.signal,
+      });
+      const loadResume = async (applicationId: string, index: 0 | 1) => {
         try {
           const blob = await fetchInstance(
             `admin/account/applications/${applicationId}/resume`,
-            { method: "GET" },
+            { method: "GET", signal: controller.signal },
             "blob",
           );
-          return URL.createObjectURL(blob);
+          const url = URL.createObjectURL(blob);
+          if (controller.signal.aborted) {
+            URL.revokeObjectURL(url);
+            return;
+          }
+          resumeUrlsRef.current[index] = url;
+          setResumeUrls((current) => {
+            const next = [...current] as typeof current;
+            next[index] = url;
+            return next;
+          });
         } catch {
-          return null;
+          if (!controller.signal.aborted) {
+            setResumeUrls((current) => {
+              const next = [...current] as typeof current;
+              next[index] = null;
+              return next;
+            });
+          }
         }
       };
-      const [left, right, leftResumeUrl, rightResumeUrl, questionData] =
-        await Promise.all([
+      const [left, right, questionData] = await Promise.all([
           fetchInstance(
             `admin/account/applications/${nextPair.left.application_id}`,
+            { signal: controller.signal },
           ),
           fetchInstance(
             `admin/account/applications/${nextPair.right.application_id}`,
+            { signal: controller.signal },
           ),
-          loadResume(nextPair.left.application_id),
-          loadResume(nextPair.right.application_id),
           questionsRef.current.length > 0
             ? Promise.resolve(questionsRef.current)
-            : fetchInstance("forms/questions"),
+            : fetchInstance("forms/questions", { signal: controller.signal }),
         ]);
+      if (controller.signal.aborted) return;
       setPair(nextPair);
       setDetails([left, right]);
-      setResumeUrls([leftResumeUrl, rightResumeUrl]);
       setQuestions(questionData);
       questionsRef.current = questionData;
+      setLoading(false);
+      void loadResume(nextPair.left.application_id, 0);
+      void loadResume(nextPair.right.application_id, 1);
     } catch (caught) {
+      if (controller.signal.aborted) return;
       setPair(null);
       setDetails([]);
-      setResumeUrls([]);
       setError(caught instanceof Error ? caught.message : "Unable to load a pair");
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
     }
   }, []);
 
@@ -201,9 +235,7 @@ export default function Rank() {
   }
 
   return (
-    <div className="flex h-screen w-full overflow-hidden">
-      <NavMenu />
-      <main className="flex-1 overflow-auto p-4 sm:p-8">
+      <main className="min-w-0 flex-1 overflow-auto p-4 sm:p-8">
         <div className="mx-auto max-w-7xl">
           <div className="mb-6">
             <h1 className="text-3xl font-bold">Rank Applications</h1>
@@ -222,7 +254,7 @@ export default function Rank() {
                 Try again
               </Button>
             </div>
-          ) : pair && details.length === 2 && resumeUrls.length === 2 ? (
+          ) : pair && details.length === 2 ? (
             <div className="grid gap-6 lg:grid-cols-2">
               <ApplicationCard
                 side="A"
@@ -244,6 +276,5 @@ export default function Rank() {
           ) : null}
         </div>
       </main>
-    </div>
   );
 }

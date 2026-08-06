@@ -97,9 +97,11 @@ export default function ViewApplicant() {
 
   if (!applicant)
     return (
-      <div className="p-6 max-w-4xl mx-auto">
+      <main className="min-w-0 flex-1 overflow-auto p-6">
+        <div className="max-w-4xl mx-auto">
         <p className="text-destructive text-center text-lg">{error}</p>
-      </div>
+        </div>
+      </main>
     );
 
   const sections: Record<string, Question[]> = {};
@@ -108,7 +110,8 @@ export default function ViewApplicant() {
   });
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
+    <main className="min-w-0 flex-1 overflow-auto p-6">
+      <div className="max-w-4xl mx-auto space-y-6">
       <h1 className="text-3xl font-bold text-foreground">Applicant Details</h1>
 
       {/* PROFILE SECTION + RESUME*/}
@@ -212,6 +215,7 @@ export default function ViewApplicant() {
           }
         )}
       </Accordion.Root>
-    </div>
+      </div>
+    </main>
   );
 }

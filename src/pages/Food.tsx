@@ -2,7 +2,6 @@
 import { useContext, useEffect, useState } from "react";
 import { UserContext } from "@/utils/auth";
 import { useNavigate } from "react-router";
-import NavMenu from "@/components/Navmenu";
 import fetchInstance from "@/utils/api";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -101,9 +100,7 @@ function Food() {
   };
 
   return (
-    <div className="flex h-screen gap-16">
-      <NavMenu />
-      <div className="flex-1 p-8 overflow-auto">
+      <main className="min-w-0 flex-1 p-8 overflow-auto">
         <div className="max-w-4xl">
           <h1 className="text-3xl font-bold mb-6">Food Management</h1>
           <p className="text-muted-foreground mb-6">
@@ -176,8 +173,7 @@ function Food() {
             </div>
           )}
         </div>
-      </div>
-    </div>
+      </main>
   );
 }
 

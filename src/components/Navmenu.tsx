@@ -11,6 +11,7 @@ import {
   Scale,
 } from "lucide-react";
 import { useLocation, Link } from "react-router";
+import { prefetchRoute } from "@/routeModules";
 import {
   Sheet,
   SheetContent,
@@ -28,6 +29,10 @@ function NavMenu() {
   const isFood = pathname === "/food";
   const isEmails = pathname === "/emails";
   const isRank = pathname === "/rank";
+  const preload = (route: string) => ({
+    onMouseEnter: () => prefetchRoute(route),
+    onFocus: () => prefetchRoute(route),
+  });
 
   return (
     <>
@@ -58,7 +63,11 @@ function NavMenu() {
                     asChild
                     className="inline-flex justify-start gap-2"
                   >
-                    <Link to="/" aria-current={isHome ? "page" : undefined}>
+                    <Link
+                      to="/"
+                      aria-current={isHome ? "page" : undefined}
+                      {...preload("/")}
+                    >
                       <House className="h-4 w-4" />
                       Home
                     </Link>
@@ -71,7 +80,11 @@ function NavMenu() {
                     asChild
                     className="inline-flex justify-start gap-2"
                   >
-                    <Link to="/apps" aria-current={isApps ? "page" : undefined}>
+                    <Link
+                      to="/apps"
+                      aria-current={isApps ? "page" : undefined}
+                      {...preload("/apps")}
+                    >
                       <Newspaper className="h-4 w-4" />
                       Hacker Apps
                     </Link>
@@ -84,7 +97,11 @@ function NavMenu() {
                     asChild
                     className="inline-flex justify-start gap-2"
                   >
-                    <Link to="/rank" aria-current={isRank ? "page" : undefined}>
+                    <Link
+                      to="/rank"
+                      aria-current={isRank ? "page" : undefined}
+                      {...preload("/rank")}
+                    >
                       <Scale className="h-4 w-4" />
                       Rank
                     </Link>
@@ -97,7 +114,11 @@ function NavMenu() {
                     asChild
                     className="inline-flex justify-start gap-2"
                   >
-                    <Link to="/food" aria-current={isFood ? "page" : undefined}>
+                    <Link
+                      to="/food"
+                      aria-current={isFood ? "page" : undefined}
+                      {...preload("/food")}
+                    >
                       <UtensilsCrossed className="h-4 w-4" />
                       Food
                     </Link>
@@ -113,6 +134,7 @@ function NavMenu() {
                     <Link
                       to="/emails"
                       aria-current={isEmails ? "page" : undefined}
+                      {...preload("/emails")}
                     >
                       <Mail className="h-4 w-4" />
                       Emails
@@ -146,7 +168,7 @@ function NavMenu() {
             asChild
             className="inline-flex justify-start"
           >
-            <Link to="/">
+            <Link to="/" {...preload("/")}>
               <House />
               Home
             </Link>
@@ -156,7 +178,7 @@ function NavMenu() {
             asChild
             className="inline-flex justify-start"
           >
-            <Link to="/apps">
+            <Link to="/apps" {...preload("/apps")}>
               <Newspaper />
               Hacker Apps
             </Link>
@@ -166,7 +188,7 @@ function NavMenu() {
             asChild
             className="inline-flex justify-start"
           >
-            <Link to="/rank">
+            <Link to="/rank" {...preload("/rank")}>
               <Scale />
               Rank
             </Link>
@@ -176,7 +198,7 @@ function NavMenu() {
             asChild
             className="inline-flex justify-start"
           >
-            <Link to="/food">
+            <Link to="/food" {...preload("/food")}>
               <UtensilsCrossed />
               Food
             </Link>
@@ -186,7 +208,7 @@ function NavMenu() {
             asChild
             className="inline-flex justify-start"
           >
-            <Link to="/emails">
+            <Link to="/emails" {...preload("/emails")}>
               <Mail />
               Emails
             </Link>

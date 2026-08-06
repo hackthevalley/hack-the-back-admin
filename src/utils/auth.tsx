@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useCallback, useState, createContext } from "react";
 import * as jose from "jose";
 import fetchInstance from "./api";
 
 interface UserContextType {
-  login: (token: string) => Promise<any>;
+  login: (token: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
   isAuthenticated: boolean;
@@ -15,6 +14,13 @@ interface AuthProviderProps {
 }
 
 const UserContext = createContext<UserContextType | null>(null);
+
+function assertAdminToken(token: string) {
+  const { scopes } = jose.decodeJwt(token);
+  if (!Array.isArray(scopes) || !scopes.includes("admin")) {
+    throw new Error("You do not have access");
+  }
+}
 
 export { UserContext };
 
@@ -29,62 +35,54 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const login = useCallback(async (token: string) => {
     try {
+      assertAdminToken(token);
       localStorage.setItem("auth-token", token);
-      const payload: any = jose.decodeJwt(token);
-      if (!payload.scopes.includes("admin"))
-        throw new Error("You do not have access");
-      // const response = await fetchInstance("account/login", {
-      //   method: "GET",
-      // });
       setIsAuthenticated(true);
-      // return response.data;
     } catch (err) {
       localStorage.removeItem("auth-token");
       throw err;
     }
   }, []);
+
   useEffect(() => {
-    const handler = async () => {
+    let active = true;
+
+    const refreshSession = async () => {
       const token = localStorage.getItem("auth-token");
       if (!token) {
-        setLoading(false);
+        if (active) {
+          setIsAuthenticated(false);
+          setLoading(false);
+        }
         return;
       }
       try {
         const response = await fetchInstance("account/tokens", {
           method: "POST",
         });
-        const payload: any = jose.decodeJwt(response.access_token);
-        if (!payload.scopes.includes("admin"))
-          throw new Error("You do not have access");
+        assertAdminToken(response.access_token);
+        if (!active) return;
         localStorage.setItem("auth-token", response.access_token);
-        setLoading(false);
         setIsAuthenticated(true);
       } catch (err) {
         console.error(err);
-        logout();
-        setLoading(false);
+        if (active) logout();
+      } finally {
+        if (active) setLoading(false);
       }
     };
-    let timer: number;
-    handler().then(() => {
-      timer = window.setInterval(handler, 30000);
-    });
+
+    void refreshSession();
+    const timer = window.setInterval(() => {
+      void refreshSession();
+    }, 30000);
 
     return () => {
+      active = false;
       window.clearInterval(timer);
     };
   }, [logout]);
-  useEffect(() => {
-    const token = localStorage.getItem("auth-token");
-    if (token) {
-      login(token)
-        .then(() => setLoading(false))
-        .catch(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
-  }, [login]);
+
   return (
     <UserContext.Provider value={{ login, logout, loading, isAuthenticated }}>
       {loading ? "Loading..." : children}

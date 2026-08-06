@@ -1,7 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { UserContext } from "@/utils/auth";
 import { useNavigate } from "react-router";
-import NavMenu from "@/components/Navmenu";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -161,9 +160,7 @@ function Emails() {
   };
 
   return (
-    <div className="flex h-screen gap-4">
-      <NavMenu />
-      <div className="flex-1 p-8 overflow-auto">
+      <main className="min-w-0 flex-1 p-8 overflow-auto">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
             <h1 className="text-3xl font-bold flex items-center gap-2">
@@ -339,8 +336,7 @@ function Emails() {
             </CardContent>
           </Card>
         </div>
-      </div>
-    </div>
+      </main>
   );
 }
 

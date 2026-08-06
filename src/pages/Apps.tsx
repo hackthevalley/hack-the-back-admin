@@ -1,6 +1,5 @@
 import { Applicants } from "@/components/Applicants";
 import { useApplicants } from "@/utils/useApplicants";
-import NavMenu from "@/components/Navmenu";
 import { UserContext } from "@/utils/auth";
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
@@ -53,9 +52,7 @@ function Apps() {
   ]);
 
   return (
-    <div className="flex h-screen w-full overflow-hidden">
-      <NavMenu />
-      <div className="flex-1 overflow-auto">
+      <main className="min-w-0 flex-1 overflow-auto">
         <Applicants
           applicants={applicants}
           setOffset={setOffset}
@@ -75,8 +72,7 @@ function Apps() {
           rankingSort={rankingSort}
           setRankingSort={setRankingSort}
         />
-      </div>
-    </div>
+      </main>
   );
 }
 
