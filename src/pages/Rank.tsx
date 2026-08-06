@@ -58,13 +58,13 @@ function ApplicationCard({
   );
 
   return (
-    <Card className="flex min-h-0 flex-col">
+    <Card className={`flex min-h-0 flex-col ${expanded ? "h-full overflow-hidden" : ""}`}>
       <CardHeader>
         <CardTitle>Application {side}</CardTitle>
       </CardHeader>
-      <CardContent className="flex min-h-0 flex-1 flex-col gap-4">
+      <CardContent className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
         <dl
-          className={`${expanded ? "max-h-[calc(100vh-13rem)]" : "max-h-[calc(100vh-22rem)]"} flex-1 space-y-3 overflow-y-auto pr-2`}
+          className={`${expanded ? "" : "max-h-[calc(100vh-22rem)]"} min-h-0 flex-1 space-y-3 overflow-y-auto pr-2`}
         >
           <div className="border-b pb-2">
             <dt className="mb-2 text-sm font-semibold">Resume</dt>
@@ -284,12 +284,12 @@ export default function Rank() {
   return (
       <main
         ref={rankPageRef}
-        className={`${isExpanded ? "fixed inset-0 z-[100] bg-background" : "min-w-0 flex-1"} overflow-auto p-4 sm:p-8`}
+        className={`${isExpanded ? "fixed inset-0 z-[100] overflow-hidden bg-background" : "min-w-0 flex-1 overflow-auto"} p-4 sm:p-8`}
       >
         <div
           className={
             isExpanded
-              ? "flex min-h-full max-w-none flex-col"
+              ? "flex h-full max-w-none flex-col overflow-hidden"
               : "mx-auto max-w-7xl"
           }
         >
@@ -327,7 +327,7 @@ export default function Rank() {
             </div>
           ) : pair && details.length === 2 ? (
             <div
-              className={`grid gap-6 ${isExpanded ? "min-h-0 flex-1 grid-cols-2" : "lg:grid-cols-2"}`}
+              className={`grid gap-6 ${isExpanded ? "min-h-0 flex-1 grid-cols-2 overflow-hidden" : "lg:grid-cols-2"}`}
             >
               <ApplicationCard
                 side="A"
