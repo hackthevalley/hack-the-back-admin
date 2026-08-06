@@ -1,16 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import {
-  getCoreRowModel,
-  getFilteredRowModel,
-  getSortedRowModel,
-  useReactTable,
+  useTable,
 } from "@tanstack/react-table";
 import type {
   ColumnFiltersState,
+  ColumnVisibilityState,
   RowSelectionState,
   SortingState,
-  VisibilityState,
 } from "@tanstack/react-table";
 import { AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -20,6 +17,7 @@ import { ApplicantTable } from "@/components/applicants/ApplicantTable";
 import { createApplicantColumns } from "@/components/applicants/columns";
 import type { Applicant, ApplicantFilterProps } from "@/components/applicants/types";
 import { ApplicantStatus } from "@/components/applicants/types";
+import { applicantTableFeatures } from "@/components/applicants/tableFeatures";
 import { Button } from "@/components/ui/button";
 import fetchInstance from "@/utils/api";
 
@@ -37,7 +35,8 @@ export function Applicants({ applicants, offset, setOffset, ...filters }: Applic
   const [data, setData] = useState<Applicant[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [columnVisibility, setColumnVisibility] =
+    useState<ColumnVisibilityState>({});
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   useEffect(() => {
@@ -86,16 +85,14 @@ export function Applicants({ applicants, offset, setOffset, ...filters }: Applic
     [handleApplicantAction],
   );
 
-  const table = useReactTable({
+  const table = useTable({
+    features: applicantTableFeatures,
     data,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     state: { sorting, columnFilters, columnVisibility, rowSelection },
   });
 

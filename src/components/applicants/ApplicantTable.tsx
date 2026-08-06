@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table";
 
 import type { Applicant } from "./types";
+import { applicantTableFeatures } from "./tableFeatures";
 
 export function ApplicantTable({
   table,
@@ -22,7 +23,7 @@ export function ApplicantTable({
   pageSize,
   resultCount,
 }: {
-  table: TableInstance<Applicant>;
+  table: TableInstance<typeof applicantTableFeatures, Applicant>;
   columnCount: number;
   offset: number;
   setOffset: Dispatch<SetStateAction<number>>;

@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 
 import type { Applicant, ApplicantFilterProps } from "./types";
 import { ApplicantStatus } from "./types";
+import { applicantTableFeatures } from "./tableFeatures";
 
 const GENDER_OPTIONS = [
   "Male",
@@ -37,7 +38,7 @@ const STUDY_LEVEL_OPTIONS = [
 ];
 
 type ApplicantFiltersProps = ApplicantFilterProps & {
-  table: Table<Applicant>;
+  table: Table<typeof applicantTableFeatures, Applicant>;
 };
 
 export function ApplicantFilters({

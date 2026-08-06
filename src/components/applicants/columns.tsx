@@ -14,8 +14,14 @@ import {
 
 import type { Applicant } from "./types";
 import { ApplicantStatus } from "./types";
+import { applicantTableFeatures } from "./tableFeatures";
 
 type ApplicantAction = (status: ApplicantStatus, applicationId: string) => void;
+type ApplicantColumnDef = ColumnDef<
+  typeof applicantTableFeatures,
+  Applicant,
+  unknown
+>;
 
 function sortableHeader(label: string, onClick: () => void) {
   return (
@@ -28,7 +34,7 @@ function sortableHeader(label: string, onClick: () => void) {
 
 export function createApplicantColumns(
   onAction: ApplicantAction,
-): ColumnDef<Applicant>[] {
+): ApplicantColumnDef[] {
   return [
     {
       id: "select",
@@ -55,7 +61,7 @@ export function createApplicantColumns(
       enableHiding: false,
     },
     ...(["first_name", "last_name", "email", "gender", "school"] as const).map(
-      (key): ColumnDef<Applicant> => ({
+      (key): ApplicantColumnDef => ({
         accessorKey: key,
         header: ({ column }) => (
           sortableHeader(
@@ -92,7 +98,7 @@ export function createApplicantColumns(
       ),
     },
     ...(["created_at", "updated_at"] as const).map(
-      (key): ColumnDef<Applicant> => ({
+      (key): ApplicantColumnDef => ({
         accessorKey: key,
         header: ({ column }) => (
           sortableHeader(
