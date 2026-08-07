@@ -58,19 +58,25 @@ function Login() {
         <h1 className="font-semibold text-lg">
           Sign in to view admin dashboard
         </h1>
-        <Label htmlFor="email">Email address</Label>
+        <Label htmlFor="username">Email address</Label>
         <Input
           className="w-full"
           type="email"
           id="username"
+          name="username"
+          autoComplete="username"
           placeholder="Email"
+          required
           onChange={handleChange}
         />
         <Label htmlFor="password">Password</Label>
         <Input
           type="password"
           id="password"
+          name="password"
+          autoComplete="current-password"
           placeholder="Password"
+          required
           onChange={handleChange}
         />
         <Button type="submit" variant="secondary" className="w-min">
