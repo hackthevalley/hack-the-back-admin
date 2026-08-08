@@ -8,8 +8,7 @@ import type { ApplicantsQueryParams } from "./applicants-context";
 import { ApplicantStatus, type Applicant } from "@/types/applicant";
 
 type ApplicantsApiResponse = {
-  applications?: RawApplicant[];
-  application?: RawApplicant[];
+  applications: RawApplicant[];
 };
 
 type RawApplicant = Partial<Applicant> & {
@@ -27,9 +26,6 @@ export function ApplicantsProvider({ children }: { children: ReactNode }) {
     async (params?: ApplicantsQueryParams): Promise<Applicant[]> => {
       const queryParams = new URLSearchParams({
         offset: String(params?.offset ?? 0),
-        // Keep compatibility with backend deployments from before the
-        // offset parameter was renamed.
-        ofs: String(params?.offset ?? 0),
         limit: String(params?.limit ?? 25),
       });
       if (params?.search) queryParams.set("search", params.search);
@@ -50,11 +46,7 @@ export function ApplicantsProvider({ children }: { children: ReactNode }) {
         `admin/account/applications?${queryParams.toString()}`,
         { method: "GET" },
       )) as ApplicantsApiResponse;
-      const rows = data.applications ?? data.application;
-      if (!rows) {
-        throw new Error("The applicant API returned an unexpected response");
-      }
-      return rows.map(normalizeApplicant);
+      return data.applications.map(normalizeApplicant);
     },
     [],
   );
