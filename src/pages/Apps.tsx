@@ -1,11 +1,8 @@
 import { Applicants } from "@/components/Applicants";
 import { useApplicants } from "@/utils/useApplicants";
-import { UserContext } from "@/utils/auth";
-import { useContext, useEffect, useState } from "react";
-import { useNavigate } from "react-router";
+import { useEffect, useState } from "react";
 
 function Apps() {
-  const { isAuthenticated } = useContext(UserContext) ?? {};
   const [offset, setOffset] = useState(0);
   const [search, setSearch] = useState("");
   const [levelOfStudy, setLevelOfStudy] = useState("");
@@ -14,19 +11,11 @@ function Apps() {
   const [dateSort, setDateSort] = useState("");
   const [role, setRole] = useState<string>("");
   const [rankingSort, setRankingSort] = useState("");
-  const navigate = useNavigate();
   const { applicants, refreshApplicants } = useApplicants();
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("/login");
-    }
-  }, [isAuthenticated, navigate]);
 
   // Refetch applicants when any filter changes
   useEffect(() => {
-    if (isAuthenticated) {
-      refreshApplicants({
+    refreshApplicants({
         offset,
         limit: 25,
         search,
@@ -36,8 +25,7 @@ function Apps() {
         dateSort,
         role,
         rankingSort,
-      });
-    }
+    });
   }, [
     offset,
     search,
@@ -47,7 +35,6 @@ function Apps() {
     dateSort,
     role,
     rankingSort,
-    isAuthenticated,
     refreshApplicants,
   ]);
 

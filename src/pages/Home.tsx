@@ -1,19 +1,9 @@
-import { useContext, useEffect } from "react";
-import { UserContext } from "@/utils/auth";
-import { useNavigate } from "react-router";
+import { useEffect } from "react";
 import StatusChart from "@/components/StatusChart";
 import { useApplicants } from "@/utils/useApplicants";
 
 function Home() {
-  const { isAuthenticated } = useContext(UserContext) ?? {};
-  const navigate = useNavigate();
   const { applicants, refreshAllApplicants } = useApplicants();
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("/login");
-    }
-  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     refreshAllApplicants().catch((error) => console.error(error));

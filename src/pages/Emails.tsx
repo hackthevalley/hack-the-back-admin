@@ -1,6 +1,4 @@
-import { useContext, useEffect, useState } from "react";
-import { UserContext } from "@/utils/auth";
-import { useNavigate } from "react-router";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,13 +18,21 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { toast } from "sonner";
-import fetchInstance from "@/utils/api";
+import { sendBulkEmail } from "@/api/admin";
 import { Mail, Send, CheckCircle, XCircle } from "lucide-react";
 
 interface EmailTemplate {
   name: string;
   path: string;
   description: string;
+}
+
+interface BulkEmailResponse {
+  message: string;
+  total_recipients: number;
+  emails_sent: number;
+  emails_failed: number;
+  failures: unknown[];
 }
 
 const emailTemplates: EmailTemplate[] = [
@@ -74,8 +80,6 @@ const statusOptions = [
 ];
 
 function Emails() {
-  const { isAuthenticated } = useContext(UserContext) ?? {};
-  const navigate = useNavigate();
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [customTemplatePath, setCustomTemplatePath] = useState<string>("");
   const [selectedStatus, setSelectedStatus] = useState<string>("");
@@ -83,12 +87,6 @@ function Emails() {
   const [textBody, setTextBody] = useState<string>("");
   const [contextData, setContextData] = useState<string>("");
   const [isSending, setIsSending] = useState<boolean>(false);
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("/login");
-    }
-  }, [isAuthenticated, navigate]);
 
   const handleSendBulkEmail = async () => {
     const templatePath =
@@ -117,15 +115,12 @@ function Emails() {
     setIsSending(true);
 
     try {
-      const response = await fetchInstance("admin/account/bulk-emails", {
-        method: "POST",
-        body: JSON.stringify({
+      const response = await sendBulkEmail<BulkEmailResponse>({
           template_path: templatePath,
           status: selectedStatus,
-          subject: subject,
+          subject,
           text_body: textBody,
-          context: context,
-        }),
+          context,
       });
 
       const successMessage = `${response.message}\nTotal: ${response.total_recipients} | Sent: ${response.emails_sent} | Failed: ${response.emails_failed}`;

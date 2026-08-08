@@ -1,11 +1,15 @@
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import fetchInstance from "@/utils/api";
-import { UserContext } from "@/utils/auth";
+import {
+  getApplication,
+  getApplicationResume,
+  getJudgingPair,
+  getQuestions,
+  submitJudgingDecision,
+} from "@/api/admin";
 
 type Score = {
   application_id: string;
@@ -110,8 +114,6 @@ function ApplicationCard({
 }
 
 export default function Rank() {
-  const { isAuthenticated } = useContext(UserContext) ?? {};
-  const navigate = useNavigate();
   const [pair, setPair] = useState<Pair | null>(null);
   const [details, setDetails] = useState<ApplicationDetail[]>([]);
   const [resumeUrls, setResumeUrls] = useState<
@@ -126,10 +128,6 @@ export default function Rank() {
   const [submitting, setSubmitting] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!isAuthenticated) navigate("/login");
-  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     if (!isExpanded) return;
@@ -177,16 +175,10 @@ export default function Rank() {
     setError(null);
     setResumeUrls([undefined, undefined]);
     try {
-      const nextPair: Pair = await fetchInstance("admin/judging/pair", {
-        signal: controller.signal,
-      });
+      const nextPair = await getJudgingPair<Pair>(controller.signal);
       const loadResume = async (applicationId: string, index: 0 | 1) => {
         try {
-          const blob = await fetchInstance(
-            `admin/account/applications/${applicationId}/resume`,
-            { method: "GET", signal: controller.signal },
-            "blob",
-          );
+          const blob = await getApplicationResume(applicationId, controller.signal);
           const url = URL.createObjectURL(blob);
           if (controller.signal.aborted) {
             URL.revokeObjectURL(url);
@@ -209,17 +201,11 @@ export default function Rank() {
         }
       };
       const [left, right, questionData] = await Promise.all([
-          fetchInstance(
-            `admin/account/applications/${nextPair.left.application_id}`,
-            { signal: controller.signal },
-          ),
-          fetchInstance(
-            `admin/account/applications/${nextPair.right.application_id}`,
-            { signal: controller.signal },
-          ),
+          getApplication<ApplicationDetail>(nextPair.left.application_id, controller.signal),
+          getApplication<ApplicationDetail>(nextPair.right.application_id, controller.signal),
           questionsRef.current.length > 0
             ? Promise.resolve(questionsRef.current)
-            : fetchInstance("forms/questions", { signal: controller.signal }),
+            : getQuestions<Question[]>(controller.signal),
         ]);
       if (controller.signal.aborted) return;
       setPair(nextPair);
@@ -240,21 +226,18 @@ export default function Rank() {
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated) void loadPair();
-  }, [isAuthenticated, loadPair]);
+    void loadPair();
+  }, [loadPair]);
 
   async function chooseWinner(winnerApplicationId: string) {
     if (!pair || submitting) return;
     setSubmitting(true);
     try {
-      await fetchInstance("admin/judging/decisions", {
-        method: "POST",
-        body: JSON.stringify({
-          request_id: crypto.randomUUID(),
-          left_application_id: pair.left.application_id,
-          right_application_id: pair.right.application_id,
-          winner_application_id: winnerApplicationId,
-        }),
+      await submitJudgingDecision({
+        request_id: crypto.randomUUID(),
+        left_application_id: pair.left.application_id,
+        right_application_id: pair.right.application_id,
+        winner_application_id: winnerApplicationId,
       });
       toast.success("Ranking recorded");
       await loadPair();

@@ -19,7 +19,7 @@ import type { Applicant, ApplicantFilterProps } from "@/components/applicants/ty
 import { ApplicantStatus } from "@/components/applicants/types";
 import { applicantTableFeatures } from "@/components/applicants/tableFeatures";
 import { Button } from "@/components/ui/button";
-import fetchInstance from "@/utils/api";
+import { updateApplicationStatus as updateApplicationStatusRequest } from "@/api/admin";
 
 type ApplicantsProps = ApplicantFilterProps & {
   applicants?: Applicant[];
@@ -61,10 +61,7 @@ export function Applicants({ applicants, offset, setOffset, ...filters }: Applic
   const handleApplicantAction = useCallback(
     async (action: ApplicantStatus, applicationId: string) => {
       try {
-        const response = await fetchInstance(
-          `admin/account/applications/${applicationId}/status?request=${action}`,
-          { method: "PATCH" },
-        );
+        const response = await updateApplicationStatusRequest(applicationId, action);
         if (response.application_id !== applicationId) {
           toast.warning("Action failed");
           return;
@@ -101,10 +98,7 @@ export function Applicants({ applicants, offset, setOffset, ...filters }: Applic
     try {
       await Promise.all(
         selectedApplicants.map(async (applicant) => {
-          const response = await fetchInstance(
-            `admin/account/applications/${applicant.app_id}/status?request=${action}`,
-            { method: "PATCH" },
-          );
+          const response = await updateApplicationStatusRequest(applicant.app_id, action);
           if (response.application_id === applicant.app_id) {
             updateApplicationStatus(applicant.app_id, action);
           }

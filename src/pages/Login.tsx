@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState, useContext, useEffect } from "react";
-import fetchInstance from "@/utils/api";
+import { createSession } from "@/api/auth";
 import { useNavigate } from "react-router";
 import { UserContext } from "@/utils/auth";
 import { toast } from "sonner";
@@ -20,18 +20,8 @@ function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const urlEncodedData = new URLSearchParams();
-    urlEncodedData.append("username", formData.username);
-    urlEncodedData.append("password", formData.password);
-
     try {
-      const response = await fetchInstance("account/sessions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: urlEncodedData.toString(),
-      });
+      const response = await createSession(formData.username, formData.password);
 
       if (response.access_token && login) {
         await login(response.access_token);

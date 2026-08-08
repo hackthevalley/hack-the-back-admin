@@ -1,6 +1,6 @@
 import { useEffect, useCallback, useState, createContext } from "react";
 import * as jose from "jose";
-import fetchInstance from "./api";
+import { refreshSession as requestSessionRefresh } from "@/api/auth";
 
 interface UserContextType {
   login: (token: string) => Promise<void>;
@@ -57,9 +57,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return;
       }
       try {
-        const response = await fetchInstance("account/tokens", {
-          method: "POST",
-        });
+        const response = await requestSessionRefresh();
         assertAdminToken(response.access_token);
         if (!active) return;
         localStorage.setItem("auth-token", response.access_token);

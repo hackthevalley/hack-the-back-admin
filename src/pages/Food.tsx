@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useContext, useEffect, useState } from "react";
-import { UserContext } from "@/utils/auth";
-import { useNavigate } from "react-router";
-import fetchInstance from "@/utils/api";
+import { useEffect, useState } from "react";
+import { getMeals, updateMeal } from "@/api/admin";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,21 +21,13 @@ interface Meal {
 }
 
 function Food() {
-  const { isAuthenticated } = useContext(UserContext) ?? {};
-  const navigate = useNavigate();
   const [meals, setMeals] = useState<Meal[]>([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("/login");
-    }
-  }, [isAuthenticated, navigate]);
 
   const fetchMeals = async () => {
     try {
       setLoading(true);
-      const response = await fetchInstance("meals");
+      const response = await getMeals<Meal[]>();
       setMeals(response);
     } catch (error: any) {
       toast.error(error.message || "Failed to load meals");
@@ -47,10 +37,8 @@ function Food() {
   };
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchMeals();
-    }
-  }, [isAuthenticated]);
+    void fetchMeals();
+  }, []);
 
   const toggleMealStatus = async (mealId: string, currentStatus: boolean) => {
     try {
@@ -60,18 +48,12 @@ function Food() {
 
         // Deactivate all currently active meals
         for (const meal of activeMeals) {
-          await fetchInstance(`meals/${meal.id}`, {
-            method: "PATCH",
-            body: JSON.stringify({ is_active: false }),
-          });
+          await updateMeal(meal.id, false);
         }
       }
 
       // Now toggle the selected meal
-      await fetchInstance(`meals/${mealId}`, {
-        method: "PATCH",
-        body: JSON.stringify({ is_active: !currentStatus }),
-      });
+      await updateMeal(mealId, !currentStatus);
 
       toast.success(`Meal ${!currentStatus ? "activated" : "deactivated"}`);
 

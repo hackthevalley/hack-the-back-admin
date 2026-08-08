@@ -1,10 +1,8 @@
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import * as Accordion from "@radix-ui/react-accordion";
 import { ChevronDown } from "lucide-react";
-import { UserContext } from "@/utils/auth";
-import { useNavigate } from "react-router";
 
-import fetchInstance from "@/utils/api";
+import { getApplication, getApplicationResume, getQuestions } from "@/api/admin";
 import { useParams } from "react-router";
 
 interface Question {
@@ -64,20 +62,9 @@ export default function ViewApplicant() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [resumeUrl, setResumeUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { isAuthenticated } = useContext(UserContext) ?? {};
-
-  const navigate = useNavigate();
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("/login");
-    }
-  }, [isAuthenticated, navigate]);
-
   useEffect(() => {
     if (!app_id) return;
-    fetchInstance(`admin/account/applications/${app_id}`, {
-      method: "GET",
-    })
+    getApplication<ApplicantDetail>(app_id)
       .then((applicationData) => {
         setApplicant(applicationData);
       })
@@ -85,7 +72,7 @@ export default function ViewApplicant() {
   }, [app_id]);
 
   useEffect(() => {
-    fetchInstance("forms/questions")
+    getQuestions<Question[]>()
       .then((questionsData) => {
         setQuestions(questionsData);
       })
@@ -95,7 +82,7 @@ export default function ViewApplicant() {
   useEffect(() => {
     if (!app_id) return;
 
-    fetchInstance(`admin/account/applications/${app_id}/resume`, { method: "GET" }, "blob")
+    getApplicationResume(app_id)
       .then((blob) => {
         const url = URL.createObjectURL(blob);
         setResumeUrl(url);
