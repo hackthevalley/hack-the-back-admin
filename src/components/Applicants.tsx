@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Dispatch, SetStateAction } from "react";
 import {
   useTable,
 } from "@tanstack/react-table";
@@ -15,21 +14,25 @@ import { toast } from "sonner";
 import { ApplicantFilters } from "@/components/applicants/ApplicantFilters";
 import { ApplicantTable } from "@/components/applicants/ApplicantTable";
 import { createApplicantColumns } from "@/components/applicants/columns";
-import type { Applicant, ApplicantFilterProps } from "@/components/applicants/types";
+import type {
+  Applicant,
+  ApplicantFiltersState,
+  SetApplicantFilters,
+} from "@/components/applicants/types";
 import { ApplicantStatus } from "@/components/applicants/types";
 import { applicantTableFeatures } from "@/components/applicants/tableFeatures";
 import { Button } from "@/components/ui/button";
 import { updateApplicationStatus as updateApplicationStatusRequest } from "@/api/admin";
 
-type ApplicantsProps = ApplicantFilterProps & {
+type ApplicantsProps = {
   applicants?: Applicant[];
-  offset: number;
-  setOffset: Dispatch<SetStateAction<number>>;
+  filters: ApplicantFiltersState;
+  setFilters: SetApplicantFilters;
 };
 
 const PAGE_SIZE = 25;
 
-export function Applicants({ applicants, offset, setOffset, ...filters }: ApplicantsProps) {
+export function Applicants({ applicants, filters, setFilters }: ApplicantsProps) {
   const [data, setData] = useState<Applicant[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -117,8 +120,8 @@ export function Applicants({ applicants, offset, setOffset, ...filters }: Applic
     <div className="w-full py-4 px-4 sm:px-6">
       <ApplicantFilters
         table={table}
-        setOffset={setOffset}
-        {...filters}
+        filters={filters}
+        setFilters={setFilters}
       />
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 py-4">
         <BulkActionButton
@@ -143,8 +146,16 @@ export function Applicants({ applicants, offset, setOffset, ...filters }: Applic
       <ApplicantTable
         table={table}
         columnCount={columns.length}
-        offset={offset}
-        setOffset={setOffset}
+        offset={filters.offset}
+        setOffset={(nextOffset) =>
+          setFilters((current) => ({
+            ...current,
+            offset:
+              typeof nextOffset === "function"
+                ? nextOffset(current.offset)
+                : nextOffset,
+          }))
+        }
         pageSize={PAGE_SIZE}
         resultCount={data.length}
       />

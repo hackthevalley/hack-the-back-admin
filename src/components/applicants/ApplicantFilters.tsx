@@ -14,8 +14,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 
-import type { Applicant, ApplicantFilterProps } from "./types";
-import { ApplicantStatus } from "./types";
+import type {
+  Applicant,
+  ApplicantFiltersState,
+  SetApplicantFilters,
+} from "./types";
+import { ApplicantStatus, DEFAULT_APPLICANT_FILTERS } from "./types";
 import { applicantTableFeatures } from "./tableFeatures";
 
 const GENDER_OPTIONS = [
@@ -37,46 +41,31 @@ const STUDY_LEVEL_OPTIONS = [
   "Other",
 ];
 
-type ApplicantFiltersProps = ApplicantFilterProps & {
+type ApplicantFiltersProps = {
   table: Table<typeof applicantTableFeatures, Applicant>;
+  filters: ApplicantFiltersState;
+  setFilters: SetApplicantFilters;
 };
 
 export function ApplicantFilters({
   table,
-  search,
-  setSearch,
-  levelOfStudy,
-  setLevelOfStudy,
-  gender,
-  setGender,
-  utsc,
-  setUTSC,
-  dateSort,
-  setDateSort,
-  role,
-  setRole,
-  rankingSort,
-  setRankingSort,
-  setOffset,
+  filters,
+  setFilters,
 }: ApplicantFiltersProps) {
-  const [searchInput, setSearchInput] = useState(search);
+  const [searchInput, setSearchInput] = useState(filters.search);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
+  const updateFilters = (updates: Partial<ApplicantFiltersState>) => {
+    setFilters((current) => ({ ...current, ...updates, offset: 0 }));
+  };
+
   const runSearch = () => {
-    setSearch(searchInput);
-    setOffset(0);
+    updateFilters({ search: searchInput });
   };
 
   const clearFilters = () => {
-    setSearch("");
     setSearchInput("");
-    setLevelOfStudy("");
-    setGender("");
-    setUTSC("");
-    setDateSort("");
-    setRole("");
-    setRankingSort("");
-    setOffset(0);
+    setFilters(DEFAULT_APPLICANT_FILTERS);
   };
 
   return (
@@ -103,15 +92,15 @@ export function ApplicantFilters({
 
           <FilterMenu
             label={
-              dateSort === "oldest"
+              filters.dateSort === "oldest"
                 ? "Oldest First"
-                : dateSort === "latest"
+                : filters.dateSort === "latest"
                   ? "Latest First"
                   : "Sort by Date"
             }
             width="sm:min-w-[150px]"
           >
-            <DropdownMenuItem onClick={() => setDateSort("")}>
+            <DropdownMenuItem onClick={() => updateFilters({ dateSort: "" })}>
               No Date Sort
             </DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -119,8 +108,7 @@ export function ApplicantFilters({
               <DropdownMenuItem
                 key={value}
                 onClick={() => {
-                  setDateSort(value);
-                  setRankingSort("");
+                  updateFilters({ dateSort: value, rankingSort: "" });
                 }}
               >
                 {value === "oldest" ? "Oldest First" : "Latest First"}
@@ -130,15 +118,15 @@ export function ApplicantFilters({
 
           <FilterMenu
             label={
-              rankingSort === "highest"
+              filters.rankingSort === "highest"
                 ? "Highest Rated"
-                : rankingSort === "lowest"
+                : filters.rankingSort === "lowest"
                   ? "Lowest Rated"
                   : "Sort by Rating"
             }
             width="sm:min-w-[170px]"
           >
-            <DropdownMenuItem onClick={() => setRankingSort("")}>
+            <DropdownMenuItem onClick={() => updateFilters({ rankingSort: "" })}>
               No Rating Sort
             </DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -146,8 +134,7 @@ export function ApplicantFilters({
               <DropdownMenuItem
                 key={value}
                 onClick={() => {
-                  setRankingSort(value);
-                  setDateSort("");
+                  updateFilters({ rankingSort: value, dateSort: "" });
                 }}
               >
                 {value === "highest" ? "Highest Rated" : "Lowest Rated"}
@@ -156,15 +143,15 @@ export function ApplicantFilters({
           </FilterMenu>
 
           <FilterMenu
-            label={role ? role.replace(/_/g, " ") : "Filter by Status"}
+            label={filters.role ? filters.role.replace(/_/g, " ") : "Filter by Status"}
             width="sm:min-w-[150px]"
           >
-            <DropdownMenuItem onClick={() => setRole("")}>
+            <DropdownMenuItem onClick={() => updateFilters({ role: "" })}>
               All Statuses
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             {Object.values(ApplicantStatus).map((status) => (
-              <DropdownMenuItem key={status} onClick={() => setRole(status)}>
+              <DropdownMenuItem key={status} onClick={() => updateFilters({ role: status })}>
                 {status.replace(/_/g, " ")}
               </DropdownMenuItem>
             ))}
@@ -198,28 +185,28 @@ export function ApplicantFilters({
       {showAdvanced && (
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center py-2 gap-2">
           <OptionsMenu
-            label={levelOfStudy || "All Study Levels"}
+            label={filters.levelOfStudy || "All Study Levels"}
             emptyLabel="All Study Levels"
             options={STUDY_LEVEL_OPTIONS}
-            onSelect={setLevelOfStudy}
+            onSelect={(levelOfStudy) => updateFilters({ levelOfStudy })}
             width="sm:min-w-[200px]"
           />
           <OptionsMenu
             label={
-              utsc === "University of Toronto (Scarborough)"
+              filters.utsc === "University of Toronto (Scarborough)"
                 ? "UTSC Only"
                 : "All Schools"
             }
             emptyLabel="All Schools"
             options={["University of Toronto (Scarborough)"]}
             optionLabels={{ "University of Toronto (Scarborough)": "UTSC Only" }}
-            onSelect={setUTSC}
+            onSelect={(utsc) => updateFilters({ utsc })}
           />
           <OptionsMenu
-            label={gender || "All Genders"}
+            label={filters.gender || "All Genders"}
             emptyLabel="All Genders"
             options={GENDER_OPTIONS}
-            onSelect={setGender}
+            onSelect={(gender) => updateFilters({ gender })}
           />
           <Button variant="outline" onClick={clearFilters} className="w-full sm:w-auto">
             Clear Filters

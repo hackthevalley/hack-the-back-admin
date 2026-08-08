@@ -1,6 +1,4 @@
-import { useContext } from "react";
-import { UserContext } from "@/utils/auth";
-import { Button } from "./ui/button";
+import { useContext, type ReactElement } from "react";
 import {
   House,
   Newspaper,
@@ -9,220 +7,114 @@ import {
   UtensilsCrossed,
   Mail,
   Scale,
+  type LucideIcon,
 } from "lucide-react";
-import { useLocation, Link } from "react-router";
+import { Link, useLocation } from "react-router";
+
 import { prefetchRoute } from "@/routeModules";
+import { UserContext } from "@/utils/auth";
+import { Button } from "@/components/ui/button";
 import {
   Sheet,
-  SheetContent,
   SheetClose,
+  SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-function NavMenu() {
-  const { logout } = useContext(UserContext) ?? {};
-  const { pathname } = useLocation();
-  const isHome = pathname === "/";
-  const isApps = pathname.startsWith("/apps");
-  const isFood = pathname === "/food";
-  const isEmails = pathname === "/emails";
-  const isRank = pathname === "/rank";
-  const preload = (route: string) => ({
-    onMouseEnter: () => prefetchRoute(route),
-    onFocus: () => prefetchRoute(route),
-  });
+type NavigationItem = {
+  label: string;
+  route: string;
+  icon: LucideIcon;
+  isActive: (pathname: string) => boolean;
+};
 
+const NAVIGATION_ITEMS: NavigationItem[] = [
+  { label: "Home", route: "/", icon: House, isActive: (path) => path === "/" },
+  {
+    label: "Hacker Apps",
+    route: "/apps",
+    icon: Newspaper,
+    isActive: (path) => path.startsWith("/apps"),
+  },
+  { label: "Rank", route: "/rank", icon: Scale, isActive: (path) => path === "/rank" },
+  { label: "Food", route: "/food", icon: UtensilsCrossed, isActive: (path) => path === "/food" },
+  { label: "Emails", route: "/emails", icon: Mail, isActive: (path) => path === "/emails" },
+];
+
+function CloseOnMobile({ mobile, children }: { mobile: boolean; children: ReactElement }) {
+  return mobile ? <SheetClose asChild>{children}</SheetClose> : children;
+}
+
+function NavigationLinks({ mobile }: { mobile: boolean }) {
+  const { pathname } = useLocation();
+
+  return NAVIGATION_ITEMS.map(({ label, route, icon: Icon, isActive }) => {
+    const active = isActive(pathname);
+    return (
+      <CloseOnMobile key={route} mobile={mobile}>
+        <Button
+          variant={active ? "secondary" : "ghost"}
+          asChild
+          className="inline-flex justify-start gap-2"
+        >
+          <Link
+            to={route}
+            aria-current={active ? "page" : undefined}
+            onMouseEnter={() => prefetchRoute(route)}
+            onFocus={() => prefetchRoute(route)}
+          >
+            <Icon className="h-4 w-4" />
+            {label}
+          </Link>
+        </Button>
+      </CloseOnMobile>
+    );
+  });
+}
+
+function LogoutButton({ mobile }: { mobile: boolean }) {
+  const { logout } = useContext(UserContext) ?? {};
+  return (
+    <CloseOnMobile mobile={mobile}>
+      <Button onClick={logout} variant="secondary" className="inline-flex justify-start gap-2">
+        <LogOut className="h-4 w-4" />
+        Logout
+      </Button>
+    </CloseOnMobile>
+  );
+}
+
+function NavMenu() {
   return (
     <>
-      {/* Mobile */}
       <div className="fixed left-5 top-6 z-50 lg:hidden">
         <Sheet>
           <SheetTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              aria-label="Open navigation menu"
-              className="bg-secondary shadow-sm"
-            >
+            <Button variant="outline" size="icon" aria-label="Open navigation menu" className="bg-secondary shadow-sm">
               <Menu className="h-5 w-5" />
             </Button>
           </SheetTrigger>
-
-          <SheetContent side="left" className="p-0 w-[18rem]">
-            <SheetHeader className="px-4 pt-4 pb-2 text-left">
+          <SheetContent side="left" className="w-[18rem] p-0">
+            <SheetHeader className="px-4 pb-2 pt-4 text-left">
               <SheetTitle>Hack The Back</SheetTitle>
             </SheetHeader>
-
             <nav className="flex h-[calc(100%-4.5rem)] flex-col justify-between gap-4 border-t p-4">
-              <div className="flex flex-col gap-2">
-                <SheetClose asChild>
-                  <Button
-                    variant={isHome ? "secondary" : "ghost"}
-                    asChild
-                    className="inline-flex justify-start gap-2"
-                  >
-                    <Link
-                      to="/"
-                      aria-current={isHome ? "page" : undefined}
-                      {...preload("/")}
-                    >
-                      <House className="h-4 w-4" />
-                      Home
-                    </Link>
-                  </Button>
-                </SheetClose>
-
-                <SheetClose asChild>
-                  <Button
-                    variant={isApps ? "secondary" : "ghost"}
-                    asChild
-                    className="inline-flex justify-start gap-2"
-                  >
-                    <Link
-                      to="/apps"
-                      aria-current={isApps ? "page" : undefined}
-                      {...preload("/apps")}
-                    >
-                      <Newspaper className="h-4 w-4" />
-                      Hacker Apps
-                    </Link>
-                  </Button>
-                </SheetClose>
-
-                <SheetClose asChild>
-                  <Button
-                    variant={isRank ? "secondary" : "ghost"}
-                    asChild
-                    className="inline-flex justify-start gap-2"
-                  >
-                    <Link
-                      to="/rank"
-                      aria-current={isRank ? "page" : undefined}
-                      {...preload("/rank")}
-                    >
-                      <Scale className="h-4 w-4" />
-                      Rank
-                    </Link>
-                  </Button>
-                </SheetClose>
-
-                <SheetClose asChild>
-                  <Button
-                    variant={isFood ? "secondary" : "ghost"}
-                    asChild
-                    className="inline-flex justify-start gap-2"
-                  >
-                    <Link
-                      to="/food"
-                      aria-current={isFood ? "page" : undefined}
-                      {...preload("/food")}
-                    >
-                      <UtensilsCrossed className="h-4 w-4" />
-                      Food
-                    </Link>
-                  </Button>
-                </SheetClose>
-
-                <SheetClose asChild>
-                  <Button
-                    variant={isEmails ? "secondary" : "ghost"}
-                    asChild
-                    className="inline-flex justify-start gap-2"
-                  >
-                    <Link
-                      to="/emails"
-                      aria-current={isEmails ? "page" : undefined}
-                      {...preload("/emails")}
-                    >
-                      <Mail className="h-4 w-4" />
-                      Emails
-                    </Link>
-                  </Button>
-                </SheetClose>
-              </div>
-
-              <SheetClose asChild>
-                <Button
-                  onClick={logout}
-                  variant="secondary"
-                  className="inline-flex justify-start gap-2"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Logout
-                </Button>
-              </SheetClose>
+              <div className="flex flex-col gap-2"><NavigationLinks mobile /></div>
+              <LogoutButton mobile />
             </nav>
           </SheetContent>
         </Sheet>
       </div>
 
-      {/* Desktop */}
-      {/* w-1/5 */}
-      <div className="hidden lg:flex flex-col min-w-48 max-w-[16rem] gap-4 justify-between p-4">
+      <nav className="hidden min-w-48 max-w-[16rem] flex-col justify-between gap-4 p-4 lg:flex">
         <div className="flex flex-col gap-2">
-          <h1 className="font-semibold text-md p-2">Hack The Back</h1>
-          <Button
-            variant={isHome ? "secondary" : "ghost"}
-            asChild
-            className="inline-flex justify-start"
-          >
-            <Link to="/" {...preload("/")}>
-              <House />
-              Home
-            </Link>
-          </Button>
-          <Button
-            variant={isApps ? "secondary" : "ghost"}
-            asChild
-            className="inline-flex justify-start"
-          >
-            <Link to="/apps" {...preload("/apps")}>
-              <Newspaper />
-              Hacker Apps
-            </Link>
-          </Button>
-          <Button
-            variant={isRank ? "secondary" : "ghost"}
-            asChild
-            className="inline-flex justify-start"
-          >
-            <Link to="/rank" {...preload("/rank")}>
-              <Scale />
-              Rank
-            </Link>
-          </Button>
-          <Button
-            variant={isFood ? "secondary" : "ghost"}
-            asChild
-            className="inline-flex justify-start"
-          >
-            <Link to="/food" {...preload("/food")}>
-              <UtensilsCrossed />
-              Food
-            </Link>
-          </Button>
-          <Button
-            variant={isEmails ? "secondary" : "ghost"}
-            asChild
-            className="inline-flex justify-start"
-          >
-            <Link to="/emails" {...preload("/emails")}>
-              <Mail />
-              Emails
-            </Link>
-          </Button>
+          <h1 className="p-2 text-md font-semibold">Hack The Back</h1>
+          <NavigationLinks mobile={false} />
         </div>
-        <Button
-          onClick={logout}
-          variant="secondary"
-          className="inline-flex justify-start"
-        >
-          <LogOut />
-          Logout
-        </Button>
-      </div>
+        <LogoutButton mobile={false} />
+      </nav>
     </>
   );
 }
