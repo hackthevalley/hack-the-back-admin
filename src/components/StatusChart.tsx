@@ -40,7 +40,7 @@ type ChartField = keyof Pick<
 type ChartDatum = {
   name: string;
   value: number;
-  color: string;
+  fill: string;
 };
 
 export default function StatusChart({
@@ -147,7 +147,7 @@ export default function StatusChart({
                 >
                   <span
                     className="h-3 w-3 rounded-sm"
-                    style={{ backgroundColor: entry.color }}
+                    style={{ backgroundColor: entry.fill }}
                     aria-hidden="true"
                   />
                   <span className="truncate" title={entry.name}>
@@ -209,7 +209,7 @@ function aggregateApplicants(
 
   return visible.map((entry, index) => ({
     ...entry,
-    color: DISTINCT_COLORS[index % DISTINCT_COLORS.length],
+    fill: DISTINCT_COLORS[index % DISTINCT_COLORS.length],
   }));
 }
 
