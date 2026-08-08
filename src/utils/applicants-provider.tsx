@@ -4,21 +4,19 @@ import type { ReactNode } from "react";
 import fetchInstance from "@/utils/api";
 
 import { ApplicantsContext } from "./applicants-context";
-import type {
-  ApplicantProps,
-  ApplicantsQueryParams,
-} from "./applicants-context";
+import type { ApplicantsQueryParams } from "./applicants-context";
+import type { Applicant } from "@/types/applicant";
 
 type ApplicantsApiResponse = {
-  application: ApplicantProps[];
+  application: Applicant[];
 };
 
 export function ApplicantsProvider({ children }: { children: ReactNode }) {
-  const [applicants, setApplicants] = useState<ApplicantProps[]>([]);
+  const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [isLoadingApplicants, setIsLoadingApplicants] = useState(false);
 
   const fetchApplicantPage = useCallback(
-    async (params?: ApplicantsQueryParams): Promise<ApplicantProps[]> => {
+    async (params?: ApplicantsQueryParams): Promise<Applicant[]> => {
       const queryParams = new URLSearchParams({
         ofs: String(params?.offset ?? 0),
         limit: String(params?.limit ?? 25),
@@ -62,7 +60,7 @@ export function ApplicantsProvider({ children }: { children: ReactNode }) {
     const pageSize = 100;
     setIsLoadingApplicants(true);
     try {
-      const allApplicants: ApplicantProps[] = [];
+      const allApplicants: Applicant[] = [];
       for (let offset = 0; ; offset += pageSize) {
         const page = await fetchApplicantPage({ offset, limit: pageSize });
         allApplicants.push(...page);
@@ -94,7 +92,7 @@ export function ApplicantsProvider({ children }: { children: ReactNode }) {
   );
 }
 
-function normalizeApplicant(applicant: ApplicantProps): ApplicantProps {
+function normalizeApplicant(applicant: Applicant): Applicant {
   return {
     ...applicant,
     email: applicant.email ?? "",

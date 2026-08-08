@@ -1,22 +1,5 @@
 import { createContext } from "react";
-
-export type ApplicantProps = {
-  first_name: string;
-  last_name: string;
-  email: string;
-  status: string;
-  app_id: string;
-  created_at: string;
-  updated_at: string;
-  age?: string;
-  gender?: string;
-  school?: string;
-  level_of_study?: string;
-  role?: string;
-  ranking_mu?: number | null;
-  ranking_sigma_sq?: number | null;
-  ranking_comparison_count?: number;
-};
+import type { Applicant } from "@/types/applicant";
 
 export type ApplicantsQueryParams = {
   offset?: number;
@@ -31,7 +14,7 @@ export type ApplicantsQueryParams = {
 };
 
 export type ApplicantsContextValue = {
-  applicants: ApplicantProps[];
+  applicants: Applicant[];
   isLoadingApplicants: boolean;
   refreshApplicants: (params?: ApplicantsQueryParams) => Promise<void>;
   refreshAllApplicants: () => Promise<void>;

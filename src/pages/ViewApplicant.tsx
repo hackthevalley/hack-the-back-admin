@@ -10,7 +10,7 @@ import { useParams } from "react-router";
 interface Question {
   question_id: string;
   label: string;
-  section: string;
+  section?: string | null;
 }
 
 interface FormAnswer {
@@ -23,13 +23,13 @@ interface FormAnswerfile {
   file_path: string;
 }
 
-interface Applicant {
+interface ApplicantDetail {
   application: Record<string, unknown>;
   form_answers: FormAnswer[];
   form_answersfile: FormAnswerfile;
 }
 
-const SECTIONS = [
+const PREFERRED_SECTION_ORDER = [
   "Profile",
   "Resume",
   "School",
@@ -40,19 +40,27 @@ const SECTIONS = [
   "MLH",
 ];
 
-const SECTION_RANGES: Record<string, [number, number]> = {
-  Profile: [0, 3],
-  School: [4, 8],
-  Demography: [9, 13],
-  Experience: [14, 17],
-  Skill: [19, 26],
-  General: [27, 28],
-  MLH: [31, 31],
-};
+function groupQuestionsBySection(questions: Question[]) {
+  const grouped = new Map<string, Question[]>();
+  for (const question of questions) {
+    const section = question.section?.trim() || "Other";
+    const sectionQuestions = grouped.get(section) ?? [];
+    sectionQuestions.push(question);
+    grouped.set(section, sectionQuestions);
+  }
+
+  const orderedNames = [
+    ...PREFERRED_SECTION_ORDER.filter((section) => grouped.has(section)),
+    ...Array.from(grouped.keys()).filter(
+      (section) => !PREFERRED_SECTION_ORDER.includes(section),
+    ),
+  ];
+  return { grouped, orderedNames };
+}
 
 export default function ViewApplicant() {
   const { app_id } = useParams<{ app_id: string }>();
-  const [applicant, setApplicant] = useState<Applicant | null>(null);
+  const [applicant, setApplicant] = useState<ApplicantDetail | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [resumeUrl, setResumeUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -104,37 +112,33 @@ export default function ViewApplicant() {
       </main>
     );
 
-  const sections: Record<string, Question[]> = {};
-  SECTIONS.forEach((s) => {
-    sections[s] = questions.filter((q) => q.section === s);
-  });
+  const { grouped: questionsBySection, orderedNames: sectionNames } =
+    groupQuestionsBySection(questions);
+  const answersByQuestion = new Map(
+    applicant.form_answers.map((answer) => [answer.question_id, answer.answer]),
+  );
+  const profileQuestions = questionsBySection.get("Profile") ?? [];
+  const accordionSections = sectionNames.filter(
+    (section) => section !== "Profile" && section !== "Resume",
+  );
 
   return (
     <main className="min-w-0 flex-1 overflow-auto p-6">
       <div className="max-w-4xl mx-auto space-y-6">
       <h1 className="text-3xl font-bold text-foreground">Applicant Details</h1>
 
-      {/* PROFILE SECTION + RESUME*/}
-      {(() => {
-        const [start, end] = SECTION_RANGES["Profile"];
-        const profileQuestions = questions.slice(start, end + 1);
-        return (
-          <div className="bg-card p-4 rounded-lg shadow-md border border-border space-y-2">
+      <div className="bg-card p-4 rounded-lg shadow-md border border-border space-y-2">
             <ul className="list-inside space-y-1 text-card-foreground">
               {profileQuestions.map((q) => {
-                const answerObj = applicant.form_answers.find(
-                  (a) => a.question_id === q.question_id
-                );
+                const answer = answersByQuestion.get(q.question_id)?.trim();
                 return (
                   <li key={q.question_id} className="text-sm">
                     <strong className="text-foreground font-semibold">
                       {q.label}:
                     </strong>{" "}
                     <span className="text-muted-foreground">
-                      {answerObj &&
-                      answerObj.answer &&
-                      answerObj.answer.trim() !== ""
-                        ? answerObj.answer
+                      {answer
+                        ? answer
                         : q.label.toLowerCase().includes("phone")
                         ? "N/A"
                         : "No answer"}
@@ -159,19 +163,16 @@ export default function ViewApplicant() {
                 {error || "Loading resume..."}
               </p>
             )}
-          </div>
-        );
-      })()}
+      </div>
 
       <Accordion.Root
         type="multiple"
-        defaultValue={SECTIONS.filter((s) => s !== "Profile" && s !== "Resume")}
+        defaultValue={accordionSections}
         className="space-y-2"
       >
-        {SECTIONS.filter((s) => s !== "Profile" && s !== "Resume").map(
+        {accordionSections.map(
           (sectionName) => {
-            const [start, end] = SECTION_RANGES[sectionName];
-            const sectionQuestions = questions.slice(start, end + 1);
+            const sectionQuestions = questionsBySection.get(sectionName) ?? [];
 
             if (!sectionQuestions || sectionQuestions.length === 0) return null;
 
@@ -188,22 +189,14 @@ export default function ViewApplicant() {
                 <Accordion.Content className="p-4 bg-muted/50 border border-border rounded-b-lg overflow-hidden data-[state=closed]:opacity-0 data-[state=open]:opacity-100 data-[state=closed]:translate-y-[-10px] data-[state=open]:translate-y-0 data-[state=closed]:max-h-0 data-[state=open]:max-h-[1000px] transition-all duration-500 ease-in-out">
                   <ul className="list-disc list-inside space-y-1 text-card-foreground">
                     {sectionQuestions.map((q) => {
-                      const answerObj = applicant.form_answers.find(
-                        (a) => a.question_id === q.question_id
-                      );
+                      const answer = answersByQuestion.get(q.question_id)?.trim();
                       return (
                         <li key={q.question_id} className="text-sm">
                           <strong className="text-foreground font-semibold">
                             {q.label}:
                           </strong>{" "}
                           <span className="text-muted-foreground">
-                            {answerObj &&
-                            answerObj.answer &&
-                            answerObj.answer.trim() !== ""
-                              ? answerObj.answer
-                              : q.label.toLowerCase().includes("phone")
-                              ? "N/A"
-                              : "N/A"}
+                            {answer || "N/A"}
                           </span>
                         </li>
                       );

@@ -3,7 +3,7 @@ import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ApplicantStatus } from "@/components/applicants/types";
-import type { ApplicantProps } from "@/utils/applicants-context";
+import type { Applicant } from "@/types/applicant";
 import { useApplicants } from "@/utils/useApplicants";
 
 const DISTINCT_COLORS = [
@@ -34,7 +34,7 @@ const SUBMITTED_STATUSES = new Set<string>([
 ]);
 
 type ChartField = keyof Pick<
-  ApplicantProps,
+  Applicant,
   "gender" | "level_of_study" | "school" | "status"
 >;
 
@@ -169,7 +169,7 @@ export default function StatusChart({
 }
 
 function aggregateApplicants(
-  applicants: ApplicantProps[],
+  applicants: Applicant[],
   field: ChartField,
   maxCategories?: number,
 ): ChartDatum[] {
