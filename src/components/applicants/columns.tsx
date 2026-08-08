@@ -17,11 +17,7 @@ import { ApplicantStatus } from "./types";
 import { applicantTableFeatures } from "./tableFeatures";
 
 type ApplicantAction = (status: ApplicantStatus, applicationId: string) => void;
-type ApplicantColumnDef = ColumnDef<
-  typeof applicantTableFeatures,
-  Applicant,
-  unknown
->;
+type ApplicantColumnDef = ColumnDef<typeof applicantTableFeatures, Applicant>;
 
 function sortableHeader(label: string, onClick: () => void) {
   return (
@@ -44,7 +40,9 @@ export function createApplicantColumns(
             table.getIsAllPageRowsSelected() ||
             (table.getIsSomePageRowsSelected() && "indeterminate")
           }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          onCheckedChange={(value) => {
+            table.toggleAllPageRowsSelected(!!value);
+          }}
           className="border-primary"
           aria-label="Select all"
         />
@@ -52,7 +50,9 @@ export function createApplicantColumns(
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          onCheckedChange={(value) => {
+            row.toggleSelected(!!value);
+          }}
           className="border-primary"
           aria-label="Select row"
         />
@@ -63,12 +63,15 @@ export function createApplicantColumns(
     ...(["first_name", "last_name", "email", "gender", "school"] as const).map(
       (key): ApplicantColumnDef => ({
         accessorKey: key,
-        header: ({ column }) => (
+        header: ({ column }) =>
           sortableHeader(
-            key.replace("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase()),
-            () => column.toggleSorting(column.getIsSorted() === "asc"),
-          )
-        ),
+            key
+              .replace("_", " ")
+              .replace(/\b\w/g, (letter) => letter.toUpperCase()),
+            () => {
+              column.toggleSorting(column.getIsSorted() === "asc");
+            },
+          ),
         cell: ({ row }) => (
           <div className={key === "email" ? "lowercase" : "capitalize"}>
             {String(row.getValue(key) || "N/A")}
@@ -79,7 +82,9 @@ export function createApplicantColumns(
     {
       accessorKey: "status",
       header: "Status",
-      cell: ({ row }) => <div className="capitalize">{row.getValue("status")}</div>,
+      cell: ({ row }) => (
+        <div className="capitalize">{row.getValue("status")}</div>
+      ),
     },
     {
       accessorKey: "ranking_mu",
@@ -100,12 +105,13 @@ export function createApplicantColumns(
     ...(["created_at", "updated_at"] as const).map(
       (key): ApplicantColumnDef => ({
         accessorKey: key,
-        header: ({ column }) => (
+        header: ({ column }) =>
           sortableHeader(
             key === "created_at" ? "Created At" : "Last Updated",
-            () => column.toggleSorting(column.getIsSorted() === "asc"),
-          )
-        ),
+            () => {
+              column.toggleSorting(column.getIsSorted() === "asc");
+            },
+          ),
         cell: ({ row }) => <div>{String(row.getValue(key))}</div>,
       }),
     ),
@@ -136,17 +142,23 @@ export function createApplicantColumns(
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={() => onAction(ApplicantStatus.ACCEPTED, applicant.app_id)}
+                onClick={() => {
+                  onAction(ApplicantStatus.ACCEPTED, applicant.app_id);
+                }}
               >
                 Accept Applicant
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => onAction(ApplicantStatus.WAITLISTED, applicant.app_id)}
+                onClick={() => {
+                  onAction(ApplicantStatus.WAITLISTED, applicant.app_id);
+                }}
               >
                 Waitlist Applicant
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => onAction(ApplicantStatus.REJECTED, applicant.app_id)}
+                onClick={() => {
+                  onAction(ApplicantStatus.REJECTED, applicant.app_id);
+                }}
               >
                 Reject Applicant
               </DropdownMenuItem>

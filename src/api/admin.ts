@@ -1,11 +1,16 @@
-import fetchInstance from "@/utils/api";
+import fetchInstance from "@/lib/api";
 import type { ApplicantStatus } from "@/types/applicant";
 
 export function getApplication<T>(applicationId: string, signal?: AbortSignal) {
-  return fetchInstance(`admin/account/applications/${applicationId}`, { signal }) as Promise<T>;
+  return fetchInstance(`admin/account/applications/${applicationId}`, {
+    signal,
+  }) as Promise<T>;
 }
 
-export function getApplicationResume(applicationId: string, signal?: AbortSignal) {
+export function getApplicationResume(
+  applicationId: string,
+  signal?: AbortSignal,
+) {
   return fetchInstance(
     `admin/account/applications/${applicationId}/resume`,
     { method: "GET", signal },
@@ -17,7 +22,10 @@ export function getQuestions<T>(signal?: AbortSignal) {
   return fetchInstance("forms/questions", { signal }) as Promise<T>;
 }
 
-export function updateApplicationStatus(applicationId: string, status: ApplicantStatus) {
+export function updateApplicationStatus(
+  applicationId: string,
+  status: ApplicantStatus,
+) {
   return fetchInstance(
     `admin/account/applications/${applicationId}/status?request=${status}`,
     { method: "PATCH" },

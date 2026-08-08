@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  useTable,
-} from "@tanstack/react-table";
+import { useTable } from "@tanstack/react-table";
 import type {
   ColumnFiltersState,
   ColumnVisibilityState,
@@ -23,6 +21,7 @@ import { ApplicantStatus } from "@/components/applicants/types";
 import { applicantTableFeatures } from "@/components/applicants/tableFeatures";
 import { Button } from "@/components/ui/button";
 import { updateApplicationStatus as updateApplicationStatusRequest } from "@/api/admin";
+import { useApplicants } from "@/context/useApplicants";
 
 type ApplicantsProps = {
   applicants?: Applicant[];
@@ -32,7 +31,12 @@ type ApplicantsProps = {
 
 const PAGE_SIZE = 25;
 
-export function Applicants({ applicants, filters, setFilters }: ApplicantsProps) {
+export function Applicants({
+  applicants,
+  filters,
+  setFilters,
+}: ApplicantsProps) {
+  const { updateApplicantStatus } = useApplicants();
   const [data, setData] = useState<Applicant[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -44,7 +48,7 @@ export function Applicants({ applicants, filters, setFilters }: ApplicantsProps)
     setData((applicants ?? []).map(formatApplicantDates));
   }, [applicants]);
 
-  const updateApplicationStatus = useCallback(
+  const applyApplicationStatus = useCallback(
     (applicationId: string, status: ApplicantStatus) => {
       setData((current) =>
         current.map((applicant) =>
@@ -57,29 +61,36 @@ export function Applicants({ applicants, filters, setFilters }: ApplicantsProps)
             : applicant,
         ),
       );
+      updateApplicantStatus(applicationId, status);
     },
-    [],
+    [updateApplicantStatus],
   );
 
   const handleApplicantAction = useCallback(
     async (action: ApplicantStatus, applicationId: string) => {
       try {
-        const response = await updateApplicationStatusRequest(applicationId, action);
+        const response = await updateApplicationStatusRequest(
+          applicationId,
+          action,
+        );
         if (response.application_id !== applicationId) {
           toast.warning("Action failed");
           return;
         }
-        updateApplicationStatus(applicationId, action);
+        applyApplicationStatus(applicationId, action);
         showStatusToast(action);
       } catch {
         toast.error("An error occurred while updating the applicant status.");
       }
     },
-    [updateApplicationStatus],
+    [applyApplicationStatus],
   );
 
   const columns = useMemo(
-    () => createApplicantColumns(handleApplicantAction),
+    () =>
+      createApplicantColumns((status, applicationId) => {
+        void handleApplicantAction(status, applicationId);
+      }),
     [handleApplicantAction],
   );
 
@@ -101,9 +112,12 @@ export function Applicants({ applicants, filters, setFilters }: ApplicantsProps)
     try {
       await Promise.all(
         selectedApplicants.map(async (applicant) => {
-          const response = await updateApplicationStatusRequest(applicant.app_id, action);
+          const response = await updateApplicationStatusRequest(
+            applicant.app_id,
+            action,
+          );
           if (response.application_id === applicant.app_id) {
-            updateApplicationStatus(applicant.app_id, action);
+            applyApplicationStatus(applicant.app_id, action);
           }
         }),
       );
@@ -147,15 +161,15 @@ export function Applicants({ applicants, filters, setFilters }: ApplicantsProps)
         table={table}
         columnCount={columns.length}
         offset={filters.offset}
-        setOffset={(nextOffset) =>
+        setOffset={(nextOffset) => {
           setFilters((current) => ({
             ...current,
             offset:
               typeof nextOffset === "function"
                 ? nextOffset(current.offset)
                 : nextOffset,
-          }))
-        }
+          }));
+        }}
         pageSize={PAGE_SIZE}
         resultCount={data.length}
       />
@@ -210,7 +224,8 @@ function formatTorontoDate(input: string): string {
 }
 
 function showStatusToast(action: ApplicantStatus, count?: number) {
-  const subject = count === undefined ? "Applicant" : `${count} applicant(s)`;
+  const subject =
+    count === undefined ? "Applicant" : `${String(count)} applicant(s)`;
   if (action === ApplicantStatus.ACCEPTED) {
     toast.success(`${subject} accepted`, {
       icon: <CheckCircle className="text-green-500" />,

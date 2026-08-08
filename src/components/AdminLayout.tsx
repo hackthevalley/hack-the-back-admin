@@ -1,14 +1,15 @@
 import { Suspense, useContext } from "react";
 import { Navigate, Outlet } from "react-router";
 
-import NavMenu from "@/components/Navmenu";
-import { UserContext } from "@/utils/auth";
+import NavMenu from "@/components/NavMenu";
+import { UserContext } from "@/context/auth";
+import { ROUTES } from "@/routes";
 
 export function AdminLayout() {
   const auth = useContext(UserContext);
 
   if (!auth?.isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to={ROUTES.login} replace />;
   }
 
   return (

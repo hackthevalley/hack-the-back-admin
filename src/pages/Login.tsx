@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { useState, useContext, useEffect } from "react";
 import { createSession } from "@/api/auth";
 import { useNavigate } from "react-router";
-import { UserContext } from "@/utils/auth";
+import { UserContext } from "@/context/auth";
 import { toast } from "sonner";
 
 function Login() {
@@ -14,18 +14,21 @@ function Login() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/");
+      void navigate("/");
     }
   }, [isAuthenticated, navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const response = await createSession(formData.username, formData.password);
+      const response = await createSession(
+        formData.username,
+        formData.password,
+      );
 
       if (response.access_token && login) {
-        await login(response.access_token);
-        navigate("/");
+        login(response.access_token);
+        void navigate("/");
       } else {
         toast.error("Invalid credentials. Please try again.");
       }

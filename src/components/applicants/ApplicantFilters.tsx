@@ -75,8 +75,12 @@ export function ApplicantFilters({
           <Input
             placeholder="Search"
             value={searchInput}
-            onChange={(event) => setSearchInput(event.target.value)}
-            onKeyDown={(event) => event.key === "Enter" && runSearch()}
+            onChange={(event) => {
+              setSearchInput(event.target.value);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") runSearch();
+            }}
             className="w-full sm:max-w-xs"
           />
           <Button onClick={runSearch} className="w-full sm:w-auto">
@@ -84,7 +88,9 @@ export function ApplicantFilters({
           </Button>
           <Button
             variant="outline"
-            onClick={() => setShowAdvanced((visible) => !visible)}
+            onClick={() => {
+              setShowAdvanced((visible) => !visible);
+            }}
             className="w-full sm:w-auto"
           >
             {showAdvanced ? "Hide Advanced" : "Advanced Filters"}
@@ -100,7 +106,11 @@ export function ApplicantFilters({
             }
             width="sm:min-w-[150px]"
           >
-            <DropdownMenuItem onClick={() => updateFilters({ dateSort: "" })}>
+            <DropdownMenuItem
+              onClick={() => {
+                updateFilters({ dateSort: "" });
+              }}
+            >
               No Date Sort
             </DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -126,7 +136,11 @@ export function ApplicantFilters({
             }
             width="sm:min-w-[170px]"
           >
-            <DropdownMenuItem onClick={() => updateFilters({ rankingSort: "" })}>
+            <DropdownMenuItem
+              onClick={() => {
+                updateFilters({ rankingSort: "" });
+              }}
+            >
               No Rating Sort
             </DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -143,15 +157,28 @@ export function ApplicantFilters({
           </FilterMenu>
 
           <FilterMenu
-            label={filters.role ? filters.role.replace(/_/g, " ") : "Filter by Status"}
+            label={
+              filters.applicationStatus
+                ? filters.applicationStatus.replace(/_/g, " ")
+                : "Filter by Status"
+            }
             width="sm:min-w-[150px]"
           >
-            <DropdownMenuItem onClick={() => updateFilters({ role: "" })}>
+            <DropdownMenuItem
+              onClick={() => {
+                updateFilters({ applicationStatus: "" });
+              }}
+            >
               All Statuses
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             {Object.values(ApplicantStatus).map((status) => (
-              <DropdownMenuItem key={status} onClick={() => updateFilters({ role: status })}>
+              <DropdownMenuItem
+                key={status}
+                onClick={() => {
+                  updateFilters({ applicationStatus: status });
+                }}
+              >
                 {status.replace(/_/g, " ")}
               </DropdownMenuItem>
             ))}
@@ -172,7 +199,9 @@ export function ApplicantFilters({
                     key={column.id}
                     className="capitalize"
                     checked={column.getIsVisible()}
-                    onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                    onCheckedChange={(value) => {
+                      column.toggleVisibility(value);
+                    }}
                   >
                     {column.id}
                   </DropdownMenuCheckboxItem>
@@ -188,27 +217,39 @@ export function ApplicantFilters({
             label={filters.levelOfStudy || "All Study Levels"}
             emptyLabel="All Study Levels"
             options={STUDY_LEVEL_OPTIONS}
-            onSelect={(levelOfStudy) => updateFilters({ levelOfStudy })}
+            onSelect={(levelOfStudy) => {
+              updateFilters({ levelOfStudy });
+            }}
             width="sm:min-w-[200px]"
           />
           <OptionsMenu
             label={
-              filters.utsc === "University of Toronto (Scarborough)"
+              filters.school === "University of Toronto (Scarborough)"
                 ? "UTSC Only"
                 : "All Schools"
             }
             emptyLabel="All Schools"
             options={["University of Toronto (Scarborough)"]}
-            optionLabels={{ "University of Toronto (Scarborough)": "UTSC Only" }}
-            onSelect={(utsc) => updateFilters({ utsc })}
+            optionLabels={{
+              "University of Toronto (Scarborough)": "UTSC Only",
+            }}
+            onSelect={(school) => {
+              updateFilters({ school });
+            }}
           />
           <OptionsMenu
             label={filters.gender || "All Genders"}
             emptyLabel="All Genders"
             options={GENDER_OPTIONS}
-            onSelect={(gender) => updateFilters({ gender })}
+            onSelect={(gender) => {
+              updateFilters({ gender });
+            }}
           />
-          <Button variant="outline" onClick={clearFilters} className="w-full sm:w-auto">
+          <Button
+            variant="outline"
+            onClick={clearFilters}
+            className="w-full sm:w-auto"
+          >
             Clear Filters
           </Button>
         </div>
@@ -259,12 +300,21 @@ function OptionsMenu({
 }) {
   return (
     <FilterMenu label={label} width={width}>
-      <DropdownMenuItem onClick={() => onSelect("")}>
+      <DropdownMenuItem
+        onClick={() => {
+          onSelect("");
+        }}
+      >
         {emptyLabel}
       </DropdownMenuItem>
       <DropdownMenuSeparator />
       {options.map((option) => (
-        <DropdownMenuItem key={option} onClick={() => onSelect(option)}>
+        <DropdownMenuItem
+          key={option}
+          onClick={() => {
+            onSelect(option);
+          }}
+        >
           {optionLabels[option] ?? option}
         </DropdownMenuItem>
       ))}

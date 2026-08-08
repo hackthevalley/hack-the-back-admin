@@ -1,4 +1,4 @@
-import fetchInstance from "@/utils/api";
+import fetchInstance from "@/lib/api";
 
 export interface TokenResponse {
   access_token: string;
@@ -14,5 +14,7 @@ export function createSession(username: string, password: string) {
 }
 
 export function refreshSession() {
-  return fetchInstance("account/tokens", { method: "POST" }) as Promise<TokenResponse>;
+  return fetchInstance("account/tokens", {
+    method: "POST",
+  }) as Promise<TokenResponse>;
 }

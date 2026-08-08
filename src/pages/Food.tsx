@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import { getMeals, updateMeal } from "@/api/admin";
 import { toast } from "sonner";
@@ -11,13 +10,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { dayNumber, sortMeals, titleCase, type Meal } from "@/lib/meals";
 
-interface Meal {
-  id: string;
-  day: string;
-  meal_type: string;
-  is_active: boolean;
-  name: string;
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "Unexpected error";
 }
 
 function Food() {
@@ -29,8 +25,8 @@ function Food() {
       setLoading(true);
       const response = await getMeals<Meal[]>();
       setMeals(response);
-    } catch (error: any) {
-      toast.error(error.message || "Failed to load meals");
+    } catch (error: unknown) {
+      toast.error(errorMessage(error) || "Failed to load meals");
     } finally {
       setLoading(false);
     }
@@ -59,103 +55,70 @@ function Food() {
 
       // Refresh meals list
       await fetchMeals();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update meal");
+    } catch (error: unknown) {
+      toast.error(errorMessage(error) || "Failed to update meal");
     }
   };
 
-  const getDayNumber = (day: string): number => {
-    const dayMap: Record<string, number> = {
-      friday: 1,
-      saturday: 2,
-      sunday: 3,
-    };
-    return dayMap[day.toLowerCase()] || 0;
-  };
-
-  const formatMealType = (type: string): string => {
-    return type.charAt(0).toUpperCase() + type.slice(1);
-  };
-
-  const formatDay = (day: string): string => {
-    return day.charAt(0).toUpperCase() + day.slice(1);
-  };
-
   return (
-      <main className="min-w-0 flex-1 p-8 overflow-auto">
-        <div className="max-w-4xl">
-          <h1 className="text-3xl font-bold mb-6">Food Management</h1>
-          <p className="text-muted-foreground mb-6">
-            Manage which meal is currently being served. Activating a new meal
-            will automatically deactivate any previously active meal.
-          </p>
+    <main className="min-w-0 flex-1 p-8 overflow-auto">
+      <div className="max-w-4xl">
+        <h1 className="text-3xl font-bold mb-6">Food Management</h1>
+        <p className="text-muted-foreground mb-6">
+          Manage which meal is currently being served. Activating a new meal
+          will automatically deactivate any previously active meal.
+        </p>
 
-          {loading ? (
-            <div className="text-center py-8">Loading meals...</div>
-          ) : (
-            <div className="border rounded-lg">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Day</TableHead>
-                    <TableHead>Meal</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+        {loading ? (
+          <div className="text-center py-8">Loading meals...</div>
+        ) : (
+          <div className="border rounded-lg">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Day</TableHead>
+                  <TableHead>Meal</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sortMeals(meals).map((meal) => (
+                  <TableRow key={meal.id}>
+                    <TableCell className="font-medium">
+                      Day {dayNumber(meal.day)} - {titleCase(meal.day)}
+                    </TableCell>
+                    <TableCell>{titleCase(meal.meal_type)}</TableCell>
+                    <TableCell>
+                      {meal.is_active ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          Active
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                          Inactive
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant={meal.is_active ? "outline" : "default"}
+                        size="sm"
+                        onClick={() =>
+                          toggleMealStatus(meal.id, meal.is_active)
+                        }
+                      >
+                        {meal.is_active ? "Deactivate" : "Activate"}
+                      </Button>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {meals
-                    .sort((a, b) => {
-                      const dayDiff = getDayNumber(a.day) - getDayNumber(b.day);
-                      if (dayDiff !== 0) return dayDiff;
-
-                      const mealOrder: Record<string, number> = {
-                        breakfast: 1,
-                        lunch: 2,
-                        dinner: 3,
-                        snack: 4,
-                      };
-                      return (
-                        (mealOrder[a.meal_type.toLowerCase()] || 0) -
-                        (mealOrder[b.meal_type.toLowerCase()] || 0)
-                      );
-                    })
-                    .map((meal) => (
-                      <TableRow key={meal.id}>
-                        <TableCell className="font-medium">
-                          Day {getDayNumber(meal.day)} - {formatDay(meal.day)}
-                        </TableCell>
-                        <TableCell>{formatMealType(meal.meal_type)}</TableCell>
-                        <TableCell>
-                          {meal.is_active ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              Active
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                              Inactive
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant={meal.is_active ? "outline" : "default"}
-                            size="sm"
-                            onClick={() =>
-                              toggleMealStatus(meal.id, meal.is_active)
-                            }
-                          >
-                            {meal.is_active ? "Deactivate" : "Activate"}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </div>
-      </main>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </div>
+    </main>
   );
 }
 

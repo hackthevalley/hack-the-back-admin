@@ -1,10 +1,9 @@
 import { useMemo } from "react";
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ApplicantStatus } from "@/components/applicants/types";
 import type { Applicant } from "@/types/applicant";
-import { useApplicants } from "@/utils/useApplicants";
 
 const DISTINCT_COLORS = [
   "#2563EB",
@@ -48,12 +47,15 @@ export default function StatusChart({
   title,
   field,
   maxCategories,
+  applicants,
+  isLoading = false,
 }: {
   title: string;
   field: ChartField;
   maxCategories?: number;
+  applicants: Applicant[];
+  isLoading?: boolean;
 }) {
-  const { applicants, isLoadingApplicants } = useApplicants();
   const data = useMemo(
     () => aggregateApplicants(applicants, field, maxCategories),
     [applicants, field, maxCategories],
@@ -71,7 +73,7 @@ export default function StatusChart({
         </div>
       </CardHeader>
       <CardContent className="pt-2">
-        {isLoadingApplicants ? (
+        {isLoading ? (
           <div className="flex h-72 items-center justify-center text-sm text-muted-foreground">
             Loading chart…
           </div>
@@ -95,11 +97,7 @@ export default function StatusChart({
                     paddingAngle={1}
                     stroke="hsl(var(--card))"
                     strokeWidth={2}
-                  >
-                    {data.map((entry) => (
-                      <Cell key={entry.name} fill={entry.color} />
-                    ))}
-                  </Pie>
+                  />
                   <Tooltip
                     formatter={(value, name) => [
                       Number(value ?? 0).toLocaleString(),
@@ -178,7 +176,7 @@ function aggregateApplicants(
     if (field !== "status" && !SUBMITTED_STATUSES.has(applicant.status)) {
       continue;
     }
-    const label = normalizeLabel(applicant[field], field);
+    const label = normalizeLabel(applicant[field] ?? undefined, field);
     const key = label.toLocaleLowerCase();
     const existing = counts.get(key);
     counts.set(key, {
@@ -188,7 +186,8 @@ function aggregateApplicants(
   }
 
   const entries = Array.from(counts.values()).sort(
-    (left, right) => right.value - left.value || left.name.localeCompare(right.name),
+    (left, right) =>
+      right.value - left.value || left.name.localeCompare(right.name),
   );
   let visible = entries;
   if (maxCategories && entries.length > maxCategories) {
@@ -216,7 +215,10 @@ function aggregateApplicants(
 
 function normalizeLabel(value: string | undefined, field: ChartField): string {
   const normalized = value?.trim();
-  if (!normalized || ["unknown", "n/a", "null"].includes(normalized.toLowerCase())) {
+  if (
+    !normalized ||
+    ["unknown", "n/a", "null"].includes(normalized.toLowerCase())
+  ) {
     return "Unknown";
   }
   if (field === "status") {

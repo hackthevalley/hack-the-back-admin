@@ -1,6 +1,6 @@
 import { Applicants } from "@/components/Applicants";
-import { useApplicants } from "@/utils/useApplicants";
-import { useEffect, useState } from "react";
+import { useApplicants } from "@/context/useApplicants";
+import { useCallback, useEffect, useState } from "react";
 import {
   DEFAULT_APPLICANT_FILTERS,
   type ApplicantFiltersState,
@@ -10,34 +10,48 @@ function Apps() {
   const [filters, setFilters] = useState<ApplicantFiltersState>(
     DEFAULT_APPLICANT_FILTERS,
   );
-  const { applicants, refreshApplicants } = useApplicants();
+  const { applicants, applicantsError, refreshApplicants } = useApplicants();
 
-  // Refetch applicants when any filter changes
-  useEffect(() => {
-    refreshApplicants({
+  const loadApplicants = useCallback(
+    () =>
+      refreshApplicants({
         offset: filters.offset,
         limit: 25,
         search: filters.search,
         level_of_study: filters.levelOfStudy,
         gender: filters.gender,
-        school: filters.utsc,
+        school: filters.school,
         dateSort: filters.dateSort,
-        role: filters.role,
+        applicationStatus: filters.applicationStatus,
         rankingSort: filters.rankingSort,
-    });
-  }, [
-    filters,
-    refreshApplicants,
-  ]);
+      }),
+    [filters, refreshApplicants],
+  );
+
+  useEffect(() => {
+    void loadApplicants().catch(() => undefined);
+  }, [loadApplicants]);
 
   return (
-      <main className="min-w-0 flex-1 overflow-auto">
-        <Applicants
-          applicants={applicants}
-          filters={filters}
-          setFilters={setFilters}
-        />
-      </main>
+    <main className="min-w-0 flex-1 overflow-auto">
+      {applicantsError ? (
+        <div className="mx-4 mt-4 flex items-center justify-between gap-4 rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+          <span>{applicantsError}</span>
+          <button
+            type="button"
+            className="font-medium underline"
+            onClick={() => void loadApplicants()}
+          >
+            Retry
+          </button>
+        </div>
+      ) : null}
+      <Applicants
+        applicants={applicants}
+        filters={filters}
+        setFilters={setFilters}
+      />
+    </main>
   );
 }
 

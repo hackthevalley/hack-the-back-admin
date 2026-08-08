@@ -20,6 +20,10 @@ import {
 import { toast } from "sonner";
 import { sendBulkEmail } from "@/api/admin";
 import { Mail, Send, CheckCircle, XCircle } from "lucide-react";
+import {
+  APPLICANT_STATUS_OPTIONS,
+  type ApplicantStatus,
+} from "@/types/applicant";
 
 interface EmailTemplate {
   name: string;
@@ -30,9 +34,8 @@ interface EmailTemplate {
 interface BulkEmailResponse {
   message: string;
   total_recipients: number;
-  emails_sent: number;
-  emails_failed: number;
-  failures: unknown[];
+  status: "queued" | "no_recipients";
+  job_id?: string;
 }
 
 const emailTemplates: EmailTemplate[] = [
@@ -63,26 +66,20 @@ const emailTemplates: EmailTemplate[] = [
   },
 ];
 
-const statusOptions = [
-  { value: "ACCOUNT_INACTIVE", label: "Account Inactive" },
-  { value: "NOT_APPLIED", label: "Not Applied" },
-  { value: "APPLYING", label: "Applying" },
-  { value: "APPLIED", label: "Applied" },
-  { value: "UNDER_REVIEW", label: "Under Review" },
-  { value: "WAITLISTED", label: "Waitlisted" },
-  { value: "ACCEPTED", label: "Accepted" },
-  { value: "REJECTED", label: "Rejected" },
-  { value: "ACCEPTED_INVITE", label: "Accepted Invite" },
-  { value: "REJECTED_INVITE", label: "Rejected Invite" },
-  { value: "SCANNED_IN", label: "Scanned In" },
-  { value: "WALK_IN", label: "Walk In" },
-  { value: "WALK_IN_SUBMITTED", label: "Walk In Submitted" },
-];
+const statusOptions = APPLICANT_STATUS_OPTIONS.map((value) => ({
+  value,
+  label: value
+    .replaceAll("_", " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase()),
+}));
 
 function Emails() {
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [customTemplatePath, setCustomTemplatePath] = useState<string>("");
-  const [selectedStatus, setSelectedStatus] = useState<string>("");
+  const [selectedStatus, setSelectedStatus] = useState<ApplicantStatus | "">(
+    "",
+  );
   const [subject, setSubject] = useState<string>("");
   const [textBody, setTextBody] = useState<string>("");
   const [contextData, setContextData] = useState<string>("");
@@ -102,10 +99,14 @@ function Emails() {
       return;
     }
 
-    let context = {};
+    let context: Record<string, unknown> = {};
     if (contextData.trim()) {
       try {
-        context = JSON.parse(contextData);
+        const parsed: unknown = JSON.parse(contextData);
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+          throw new Error("Context must be a JSON object");
+        }
+        context = parsed as Record<string, unknown>;
       } catch {
         toast.error("Invalid JSON in context field");
         return;
@@ -116,25 +117,17 @@ function Emails() {
 
     try {
       const response = await sendBulkEmail<BulkEmailResponse>({
-          template_path: templatePath,
-          status: selectedStatus,
-          subject,
-          text_body: textBody,
-          context,
+        template_path: templatePath,
+        status: selectedStatus,
+        subject,
+        text_body: textBody,
+        context,
       });
 
-      const successMessage = `${response.message}\nTotal: ${response.total_recipients} | Sent: ${response.emails_sent} | Failed: ${response.emails_failed}`;
-
-      if (response.emails_failed > 0) {
-        toast.warning(successMessage, {
-          duration: 5000,
-        });
-        console.error("Failed emails:", response.failures);
-      } else {
-        toast.success(successMessage, {
-          duration: 5000,
-        });
-      }
+      toast.success(
+        `${response.message}\nTotal recipients: ${String(response.total_recipients)}`,
+        { duration: 5000 },
+      );
 
       // Reset form
       setSelectedTemplate("");
@@ -147,7 +140,7 @@ function Emails() {
       toast.error(
         `Failed to send emails: ${
           error instanceof Error ? error.message : "Unknown error"
-        }`
+        }`,
       );
     } finally {
       setIsSending(false);
@@ -155,183 +148,191 @@ function Emails() {
   };
 
   return (
-      <main className="min-w-0 flex-1 p-8 overflow-auto">
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <Mail className="h-8 w-8" />
-              Bulk Email Sender
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              Send emails to all users with a specific application status
-            </p>
-          </div>
+    <main className="min-w-0 flex-1 p-8 overflow-auto">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <Mail className="h-8 w-8" />
+            Bulk Email Sender
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Send emails to all users with a specific application status
+          </p>
+        </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Email Configuration</CardTitle>
-              <CardDescription>
-                Select a template, target status, and customize your message
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="template">Email Template *</Label>
-                <Select
-                  value={selectedTemplate}
-                  onValueChange={setSelectedTemplate}
-                >
-                  <SelectTrigger id="template">
-                    <SelectValue placeholder="Select an email template" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {emailTemplates.map((template) => (
-                      <SelectItem key={template.path} value={template.path}>
-                        <div className="flex flex-col items-start">
-                          <span className="font-medium">{template.name}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {template.description}
-                          </span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                    <SelectItem value="other">
+        <Card>
+          <CardHeader>
+            <CardTitle>Email Configuration</CardTitle>
+            <CardDescription>
+              Select a template, target status, and customize your message
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="template">Email Template *</Label>
+              <Select
+                value={selectedTemplate}
+                onValueChange={setSelectedTemplate}
+              >
+                <SelectTrigger id="template">
+                  <SelectValue placeholder="Select an email template" />
+                </SelectTrigger>
+                <SelectContent>
+                  {emailTemplates.map((template) => (
+                    <SelectItem key={template.path} value={template.path}>
                       <div className="flex flex-col items-start">
-                        <span className="font-medium">Other</span>
+                        <span className="font-medium">{template.name}</span>
                         <span className="text-xs text-muted-foreground">
-                          Use a custom template path
+                          {template.description}
                         </span>
                       </div>
                     </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                  ))}
+                  <SelectItem value="other">
+                    <div className="flex flex-col items-start">
+                      <span className="font-medium">Other</span>
+                      <span className="text-xs text-muted-foreground">
+                        Use a custom template path
+                      </span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-              {selectedTemplate === "other" && (
-                <div className="space-y-2">
-                  <Label htmlFor="customPath">Custom Template Path *</Label>
-                  <Input
-                    id="customPath"
-                    placeholder="templates/custom_email.html"
-                    value={customTemplatePath}
-                    onChange={(e) => setCustomTemplatePath(e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Enter the path to your custom email template
-                  </p>
-                </div>
-              )}
-
+            {selectedTemplate === "other" && (
               <div className="space-y-2">
-                <Label htmlFor="status">Target Status *</Label>
-                <Select
-                  value={selectedStatus}
-                  onValueChange={setSelectedStatus}
-                >
-                  <SelectTrigger id="status">
-                    <SelectValue placeholder="Select application status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {statusOptions.map((status) => (
-                      <SelectItem key={status.value} value={status.value}>
-                        {status.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="subject">Email Subject *</Label>
+                <Label htmlFor="customPath">Custom Template Path *</Label>
                 <Input
-                  id="subject"
-                  placeholder="Enter email subject"
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="textBody">Text Body *</Label>
-                <Textarea
-                  id="textBody"
-                  placeholder="Enter plain text version of the email"
-                  rows={4}
-                  value={textBody}
-                  onChange={(e) => setTextBody(e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="context">
-                  Template Context (JSON, Optional)
-                </Label>
-                <Textarea
-                  id="context"
-                  placeholder='{"discord_link": "https://...", "devpost_link": "https://...", "hacker_package_link": "https://..."}'
-                  rows={4}
-                  value={contextData}
-                  onChange={(e) => setContextData(e.target.value)}
-                  className="font-mono text-sm"
+                  id="customPath"
+                  placeholder="templates/custom_email.html"
+                  value={customTemplatePath}
+                  onChange={(e) => {
+                    setCustomTemplatePath(e.target.value);
+                  }}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Variables available by default: first_name, last_name, email.
-                  Add custom template variables here as JSON.
+                  Enter the path to your custom email template
                 </p>
               </div>
+            )}
 
-              <div className="flex gap-4 pt-4">
-                <Button
-                  onClick={handleSendBulkEmail}
-                  disabled={
-                    isSending ||
-                    !selectedTemplate ||
-                    !selectedStatus ||
-                    !subject ||
-                    !textBody ||
-                    (selectedTemplate === "other" && !customTemplatePath.trim())
-                  }
-                  className="flex items-center gap-2"
-                >
-                  <Send className="h-4 w-4" />
-                  {isSending ? "Sending..." : "Send Bulk Email"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+            <div className="space-y-2">
+              <Label htmlFor="status">Target Status *</Label>
+              <Select
+                value={selectedStatus}
+                onValueChange={(value) => {
+                  setSelectedStatus(value as ApplicantStatus);
+                }}
+              >
+                <SelectTrigger id="status">
+                  <SelectValue placeholder="Select application status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {statusOptions.map((status) => (
+                    <SelectItem key={status.value} value={status.value}>
+                      {status.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">
-                Important Notes
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm text-muted-foreground">
-              <div className="flex gap-2">
-                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
-                <p>
-                  Emails are sent to all active users with the selected
-                  application status
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
-                <p>
-                  Template variables like first_name, last_name, and email are
-                  automatically included
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <XCircle className="h-4 w-4 text-red-500 mt-0.5" />
-                <p>
-                  This action cannot be undone - double check your configuration
-                  before sending
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
+            <div className="space-y-2">
+              <Label htmlFor="subject">Email Subject *</Label>
+              <Input
+                id="subject"
+                placeholder="Enter email subject"
+                value={subject}
+                onChange={(e) => {
+                  setSubject(e.target.value);
+                }}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="textBody">Text Body *</Label>
+              <Textarea
+                id="textBody"
+                placeholder="Enter plain text version of the email"
+                rows={4}
+                value={textBody}
+                onChange={(e) => {
+                  setTextBody(e.target.value);
+                }}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="context">Template Context (JSON, Optional)</Label>
+              <Textarea
+                id="context"
+                placeholder='{"discord_link": "https://...", "devpost_link": "https://...", "hacker_package_link": "https://..."}'
+                rows={4}
+                value={contextData}
+                onChange={(e) => {
+                  setContextData(e.target.value);
+                }}
+                className="font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                Variables available by default: first_name, last_name, email.
+                Add custom template variables here as JSON.
+              </p>
+            </div>
+
+            <div className="flex gap-4 pt-4">
+              <Button
+                onClick={handleSendBulkEmail}
+                disabled={
+                  isSending ||
+                  !selectedTemplate ||
+                  !selectedStatus ||
+                  !subject ||
+                  !textBody ||
+                  (selectedTemplate === "other" && !customTemplatePath.trim())
+                }
+                className="flex items-center gap-2"
+              >
+                <Send className="h-4 w-4" />
+                {isSending ? "Sending..." : "Send Bulk Email"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">
+              Important Notes
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-muted-foreground">
+            <div className="flex gap-2">
+              <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+              <p>
+                Emails are sent to all active users with the selected
+                application status
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+              <p>
+                Template variables like first_name, last_name, and email are
+                automatically included
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <XCircle className="h-4 w-4 text-red-500 mt-0.5" />
+              <p>
+                This action cannot be undone - double check your configuration
+                before sending
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </main>
   );
 }
 

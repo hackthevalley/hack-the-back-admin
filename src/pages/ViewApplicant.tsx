@@ -2,30 +2,13 @@ import { useEffect, useState } from "react";
 import * as Accordion from "@radix-ui/react-accordion";
 import { ChevronDown } from "lucide-react";
 
-import { getApplication, getApplicationResume, getQuestions } from "@/api/admin";
+import {
+  getApplication,
+  getApplicationResume,
+  getQuestions,
+} from "@/api/admin";
 import { useParams } from "react-router";
-
-interface Question {
-  question_id: string;
-  label: string;
-  section?: string | null;
-}
-
-interface FormAnswer {
-  question_id: string;
-  answer: string;
-}
-
-interface FormAnswerfile {
-  original_filename: string;
-  file_path: string;
-}
-
-interface ApplicantDetail {
-  application: Record<string, unknown>;
-  form_answers: FormAnswer[];
-  form_answersfile: FormAnswerfile;
-}
+import type { ApplicationDetail, Question } from "@/types/applicant";
 
 const PREFERRED_SECTION_ORDER = [
   "Profile",
@@ -58,17 +41,23 @@ function groupQuestionsBySection(questions: Question[]) {
 
 export default function ViewApplicant() {
   const { app_id } = useParams<{ app_id: string }>();
-  const [applicant, setApplicant] = useState<ApplicantDetail | null>(null);
+  const [applicant, setApplicant] = useState<ApplicationDetail | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [resumeUrl, setResumeUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     if (!app_id) return;
-    getApplication<ApplicantDetail>(app_id)
+    getApplication<ApplicationDetail>(app_id)
       .then((applicationData) => {
         setApplicant(applicationData);
       })
-      .catch(() => setError("Failed to fetch applicant"));
+      .catch(() => {
+        setError("Failed to fetch applicant");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [app_id]);
 
   useEffect(() => {
@@ -76,25 +65,44 @@ export default function ViewApplicant() {
       .then((questionsData) => {
         setQuestions(questionsData);
       })
-      .catch(() => setError("Failed to fetch questions"));
+      .catch(() => {
+        setError("Failed to fetch questions");
+      });
   }, []);
 
   useEffect(() => {
     if (!app_id) return;
 
-    getApplicationResume(app_id)
+    let objectUrl: string | null = null;
+    const controller = new AbortController();
+    getApplicationResume(app_id, controller.signal)
       .then((blob) => {
-        const url = URL.createObjectURL(blob);
-        setResumeUrl(url);
+        objectUrl = URL.createObjectURL(blob);
+        setResumeUrl(objectUrl);
       })
-      .catch(() => setError("Failed to fetch resume"));
+      .catch(() => {
+        if (!controller.signal.aborted) setError("Failed to fetch resume");
+      });
+    return () => {
+      controller.abort();
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
   }, [app_id]);
+
+  if (loading)
+    return (
+      <main className="flex min-w-0 flex-1 items-center justify-center p-6 text-muted-foreground">
+        Loading applicant…
+      </main>
+    );
 
   if (!applicant)
     return (
       <main className="min-w-0 flex-1 overflow-auto p-6">
         <div className="max-w-4xl mx-auto">
-        <p className="text-destructive text-center text-lg">{error}</p>
+          <p className="text-destructive text-center text-lg">
+            {error ?? "Applicant not found"}
+          </p>
         </div>
       </main>
     );
@@ -112,56 +120,57 @@ export default function ViewApplicant() {
   return (
     <main className="min-w-0 flex-1 overflow-auto p-6">
       <div className="max-w-4xl mx-auto space-y-6">
-      <h1 className="text-3xl font-bold text-foreground">Applicant Details</h1>
+        <h1 className="text-3xl font-bold text-foreground">
+          Applicant Details
+        </h1>
 
-      <div className="bg-card p-4 rounded-lg shadow-md border border-border space-y-2">
-            <ul className="list-inside space-y-1 text-card-foreground">
-              {profileQuestions.map((q) => {
-                const answer = answersByQuestion.get(q.question_id)?.trim();
-                return (
-                  <li key={q.question_id} className="text-sm">
-                    <strong className="text-foreground font-semibold">
-                      {q.label}:
-                    </strong>{" "}
-                    <span className="text-muted-foreground">
-                      {answer
-                        ? answer
-                        : q.label.toLowerCase().includes("phone")
+        <div className="bg-card p-4 rounded-lg shadow-md border border-border space-y-2">
+          <ul className="list-inside space-y-1 text-card-foreground">
+            {profileQuestions.map((q) => {
+              const answer = answersByQuestion.get(q.question_id)?.trim();
+              return (
+                <li key={q.question_id} className="text-sm">
+                  <strong className="text-foreground font-semibold">
+                    {q.label}:
+                  </strong>{" "}
+                  <span className="text-muted-foreground">
+                    {answer
+                      ? answer
+                      : q.label.toLowerCase().includes("phone")
                         ? "N/A"
                         : "No answer"}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-            {resumeUrl ? (
-              <div className="mt-4 rounded-lg overflow-hidden border border-border">
-                <iframe
-                  src={resumeUrl}
-                  width="100%"
-                  height="600px"
-                  style={{ border: "none" }}
-                  title="Resume Preview"
-                  className="bg-background"
-                />
-              </div>
-            ) : (
-              <p className="text-muted-foreground text-sm">
-                {error || "Loading resume..."}
-              </p>
-            )}
-      </div>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          {resumeUrl ? (
+            <div className="mt-4 rounded-lg overflow-hidden border border-border">
+              <iframe
+                src={resumeUrl}
+                width="100%"
+                height="600px"
+                style={{ border: "none" }}
+                title="Resume Preview"
+                className="bg-background"
+              />
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-sm">
+              {error || "Loading resume..."}
+            </p>
+          )}
+        </div>
 
-      <Accordion.Root
-        type="multiple"
-        defaultValue={accordionSections}
-        className="space-y-2"
-      >
-        {accordionSections.map(
-          (sectionName) => {
+        <Accordion.Root
+          type="multiple"
+          defaultValue={accordionSections}
+          className="space-y-2"
+        >
+          {accordionSections.map((sectionName) => {
             const sectionQuestions = questionsBySection.get(sectionName) ?? [];
 
-            if (!sectionQuestions || sectionQuestions.length === 0) return null;
+            if (sectionQuestions.length === 0) return null;
 
             return (
               <Accordion.Item key={sectionName} value={sectionName}>
@@ -176,7 +185,9 @@ export default function ViewApplicant() {
                 <Accordion.Content className="p-4 bg-muted/50 border border-border rounded-b-lg overflow-hidden data-[state=closed]:opacity-0 data-[state=open]:opacity-100 data-[state=closed]:translate-y-[-10px] data-[state=open]:translate-y-0 data-[state=closed]:max-h-0 data-[state=open]:max-h-[1000px] transition-all duration-500 ease-in-out">
                   <ul className="list-disc list-inside space-y-1 text-card-foreground">
                     {sectionQuestions.map((q) => {
-                      const answer = answersByQuestion.get(q.question_id)?.trim();
+                      const answer = answersByQuestion
+                        .get(q.question_id)
+                        ?.trim();
                       return (
                         <li key={q.question_id} className="text-sm">
                           <strong className="text-foreground font-semibold">
@@ -192,9 +203,8 @@ export default function ViewApplicant() {
                 </Accordion.Content>
               </Accordion.Item>
             );
-          }
-        )}
-      </Accordion.Root>
+          })}
+        </Accordion.Root>
       </div>
     </main>
   );

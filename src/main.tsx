@@ -4,10 +4,13 @@ import { BrowserRouter } from "react-router";
 import App from "./App.tsx";
 import "./index.css";
 import { Toaster } from "./components/ui/sonner.tsx";
-import { ApplicantsProvider } from "./utils/applicants-provider.tsx";
-import { AuthProvider } from "./utils/auth.tsx";
+import { ApplicantsProvider } from "./context/applicants-provider.tsx";
+import { AuthProvider } from "./context/auth.tsx";
 
-createRoot(document.getElementById("root")!).render(
+const root = document.getElementById("root");
+if (!root) throw new Error("Root element is missing");
+
+createRoot(root).render(
   <BrowserRouter>
     <AuthProvider>
       <ApplicantsProvider>

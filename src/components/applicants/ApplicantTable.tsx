@@ -32,7 +32,7 @@ export function ApplicantTable({
 }) {
   return (
     <>
-      <div className="overflow-x-auto rounded-md border-1 border-black p-2">
+      <div className="overflow-x-auto rounded-md border border-border p-2">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -93,7 +93,9 @@ export function ApplicantTable({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setOffset((current) => Math.max(0, current - pageSize))}
+            onClick={() => {
+              setOffset((current) => Math.max(0, current - pageSize));
+            }}
             disabled={offset === 0}
           >
             Previous
@@ -101,7 +103,9 @@ export function ApplicantTable({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setOffset((current) => current + pageSize)}
+            onClick={() => {
+              setOffset((current) => current + pageSize);
+            }}
             disabled={resultCount < pageSize}
           >
             Next

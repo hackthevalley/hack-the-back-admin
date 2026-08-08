@@ -1,9 +1,10 @@
 import { useEffect, useCallback, useState, createContext } from "react";
 import * as jose from "jose";
 import { refreshSession as requestSessionRefresh } from "@/api/auth";
+import { ApiError } from "@/lib/api";
 
 interface UserContextType {
-  login: (token: string) => Promise<void>;
+  login: (token: string) => void;
   logout: () => void;
   loading: boolean;
   isAuthenticated: boolean;
@@ -33,7 +34,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setIsAuthenticated(false);
   }, []);
 
-  const login = useCallback(async (token: string) => {
+  const login = useCallback((token: string) => {
     try {
       assertAdminToken(token);
       localStorage.setItem("auth-token", token);
@@ -63,8 +64,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
         localStorage.setItem("auth-token", response.access_token);
         setIsAuthenticated(true);
       } catch (err) {
-        console.error(err);
-        if (active) logout();
+        if (!active) return;
+        if (err instanceof ApiError && err.status === 401) {
+          logout();
+        } else {
+          try {
+            assertAdminToken(token);
+            setIsAuthenticated(true);
+          } catch {
+            logout();
+          }
+        }
       } finally {
         if (active) setLoading(false);
       }
@@ -78,6 +88,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => {
       active = false;
       window.clearInterval(timer);
+    };
+  }, [logout]);
+
+  useEffect(() => {
+    window.addEventListener("auth:unauthorized", logout);
+    return () => {
+      window.removeEventListener("auth:unauthorized", logout);
     };
   }, [logout]);
 

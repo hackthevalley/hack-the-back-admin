@@ -11,8 +11,8 @@ import {
 } from "lucide-react";
 import { Link, useLocation } from "react-router";
 
-import { prefetchRoute } from "@/routeModules";
-import { UserContext } from "@/utils/auth";
+import { prefetchRoute, routeIsActive, ROUTES, type RouteKey } from "@/routes";
+import { UserContext } from "@/context/auth";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -26,32 +26,43 @@ import {
 type NavigationItem = {
   label: string;
   route: string;
+  routeKey: RouteKey;
   icon: LucideIcon;
-  isActive: (pathname: string) => boolean;
 };
 
 const NAVIGATION_ITEMS: NavigationItem[] = [
-  { label: "Home", route: "/", icon: House, isActive: (path) => path === "/" },
+  { label: "Home", route: ROUTES.home, routeKey: "home", icon: House },
   {
     label: "Hacker Apps",
-    route: "/apps",
+    route: ROUTES.apps,
+    routeKey: "apps",
     icon: Newspaper,
-    isActive: (path) => path.startsWith("/apps"),
   },
-  { label: "Rank", route: "/rank", icon: Scale, isActive: (path) => path === "/rank" },
-  { label: "Food", route: "/food", icon: UtensilsCrossed, isActive: (path) => path === "/food" },
-  { label: "Emails", route: "/emails", icon: Mail, isActive: (path) => path === "/emails" },
+  { label: "Rank", route: ROUTES.rank, routeKey: "rank", icon: Scale },
+  {
+    label: "Food",
+    route: ROUTES.food,
+    routeKey: "food",
+    icon: UtensilsCrossed,
+  },
+  { label: "Emails", route: ROUTES.emails, routeKey: "emails", icon: Mail },
 ];
 
-function CloseOnMobile({ mobile, children }: { mobile: boolean; children: ReactElement }) {
+function CloseOnMobile({
+  mobile,
+  children,
+}: {
+  mobile: boolean;
+  children: ReactElement;
+}) {
   return mobile ? <SheetClose asChild>{children}</SheetClose> : children;
 }
 
 function NavigationLinks({ mobile }: { mobile: boolean }) {
   const { pathname } = useLocation();
 
-  return NAVIGATION_ITEMS.map(({ label, route, icon: Icon, isActive }) => {
-    const active = isActive(pathname);
+  return NAVIGATION_ITEMS.map(({ label, route, routeKey, icon: Icon }) => {
+    const active = routeIsActive(routeKey, pathname);
     return (
       <CloseOnMobile key={route} mobile={mobile}>
         <Button
@@ -62,8 +73,12 @@ function NavigationLinks({ mobile }: { mobile: boolean }) {
           <Link
             to={route}
             aria-current={active ? "page" : undefined}
-            onMouseEnter={() => prefetchRoute(route)}
-            onFocus={() => prefetchRoute(route)}
+            onMouseEnter={() => {
+              prefetchRoute(routeKey);
+            }}
+            onFocus={() => {
+              prefetchRoute(routeKey);
+            }}
           >
             <Icon className="h-4 w-4" />
             {label}
@@ -78,7 +93,11 @@ function LogoutButton({ mobile }: { mobile: boolean }) {
   const { logout } = useContext(UserContext) ?? {};
   return (
     <CloseOnMobile mobile={mobile}>
-      <Button onClick={logout} variant="secondary" className="inline-flex justify-start gap-2">
+      <Button
+        onClick={logout}
+        variant="secondary"
+        className="inline-flex justify-start gap-2"
+      >
         <LogOut className="h-4 w-4" />
         Logout
       </Button>
@@ -92,7 +111,12 @@ function NavMenu() {
       <div className="fixed left-5 top-6 z-50 lg:hidden">
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" size="icon" aria-label="Open navigation menu" className="bg-secondary shadow-sm">
+            <Button
+              variant="outline"
+              size="icon"
+              aria-label="Open navigation menu"
+              className="bg-secondary shadow-sm"
+            >
               <Menu className="h-5 w-5" />
             </Button>
           </SheetTrigger>
@@ -101,7 +125,9 @@ function NavMenu() {
               <SheetTitle>Hack The Back</SheetTitle>
             </SheetHeader>
             <nav className="flex h-[calc(100%-4.5rem)] flex-col justify-between gap-4 border-t p-4">
-              <div className="flex flex-col gap-2"><NavigationLinks mobile /></div>
+              <div className="flex flex-col gap-2">
+                <NavigationLinks mobile />
+              </div>
               <LogoutButton mobile />
             </nav>
           </SheetContent>

@@ -18,16 +18,34 @@ export interface Applicant {
   first_name: string;
   last_name: string;
   email: string;
-  status: string;
+  status: ApplicantStatus;
   app_id: string;
   created_at: string;
   updated_at: string;
-  age?: string;
-  gender?: string;
-  school?: string;
-  level_of_study?: string;
-  role?: string;
+  age: string | null;
+  gender: string | null;
+  school: string | null;
+  level_of_study: string | null;
   ranking_mu?: number | null;
   ranking_sigma_sq?: number | null;
   ranking_comparison_count?: number;
 }
+
+export interface Question {
+  question_id: string;
+  label: string;
+  section?: string | null;
+}
+
+export interface FormAnswer {
+  question_id: string;
+  answer: string | null;
+}
+
+export interface ApplicationDetail {
+  application: { application_id: string } & Record<string, unknown>;
+  form_answers: FormAnswer[];
+  form_answer_files: string | null;
+}
+
+export const APPLICANT_STATUS_OPTIONS = Object.values(ApplicantStatus);
