@@ -21,8 +21,6 @@ import { applicantTableFeatures } from "@/components/applicants/tableFeatures";
 import { Button } from "@/components/ui/button";
 import fetchInstance from "@/utils/api";
 
-export type ApplicantProps = Applicant;
-
 type ApplicantsProps = ApplicantFilterProps & {
   applicants?: Applicant[];
   offset: number;
