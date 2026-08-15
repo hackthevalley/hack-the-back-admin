@@ -18,3 +18,9 @@ export function refreshSession() {
     method: "POST",
   }) as Promise<TokenResponse>;
 }
+
+export function deleteSession() {
+  return fetchInstance("account/tokens", {
+    method: "DELETE",
+  }) as Promise<void>;
+}
