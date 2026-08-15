@@ -1,7 +1,11 @@
 import { useEffect, useCallback, useState, createContext } from "react";
 import * as jose from "jose";
-import { refreshSession as requestSessionRefresh } from "@/api/auth";
+import {
+  deleteSession,
+  refreshSession as requestSessionRefresh,
+} from "@/api/auth";
 import { ApiError } from "@/lib/api";
+import { getAccessToken, setAccessToken } from "@/lib/access-token";
 
 interface UserContextType {
   login: (token: string) => void;
@@ -30,45 +34,41 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const logout = useCallback(() => {
-    localStorage.removeItem("auth-token");
+    setAccessToken(null);
     setIsAuthenticated(false);
+    void deleteSession().catch(() => undefined);
   }, []);
 
   const login = useCallback((token: string) => {
     try {
       assertAdminToken(token);
-      localStorage.setItem("auth-token", token);
+      setAccessToken(token);
       setIsAuthenticated(true);
     } catch (err) {
-      localStorage.removeItem("auth-token");
+      setAccessToken(null);
       throw err;
     }
   }, []);
 
   useEffect(() => {
     let active = true;
+    localStorage.removeItem("auth-token");
 
     const refreshSession = async () => {
-      const token = localStorage.getItem("auth-token");
-      if (!token) {
-        if (active) {
-          setIsAuthenticated(false);
-          setLoading(false);
-        }
-        return;
-      }
       try {
         const response = await requestSessionRefresh();
         assertAdminToken(response.access_token);
         if (!active) return;
-        localStorage.setItem("auth-token", response.access_token);
+        setAccessToken(response.access_token);
         setIsAuthenticated(true);
       } catch (err) {
         if (!active) return;
         if (err instanceof ApiError && err.status === 401) {
           logout();
         } else {
+          const token = getAccessToken();
           try {
+            if (!token) throw new Error("No access token");
             assertAdminToken(token);
             setIsAuthenticated(true);
           } catch {
@@ -83,7 +83,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     void refreshSession();
     const timer = window.setInterval(() => {
       void refreshSession();
-    }, 30000);
+    }, 10 * 60 * 1000);
 
     return () => {
       active = false;
