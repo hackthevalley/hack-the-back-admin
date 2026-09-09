@@ -42,7 +42,18 @@ export interface FormAnswer {
   answer: string | null;
 }
 
+export interface ApplicationStatusHistory {
+  id: string;
+  admin_id: string;
+  admin_name: string;
+  admin_email: string;
+  previous_status: ApplicantStatus;
+  new_status: ApplicantStatus;
+  changed_at: string;
+}
+
 export interface ApplicationDetail {
+  status_history?: ApplicationStatusHistory[];
   application: { application_id: string } & Record<string, unknown>;
   form_answers: FormAnswer[];
   form_answer_files: string | null;

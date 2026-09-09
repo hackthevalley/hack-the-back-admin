@@ -162,6 +162,33 @@ export default function ViewApplicant() {
           )}
         </div>
 
+        <section className="bg-card p-4 rounded-lg border border-border space-y-3">
+          <h2 className="text-xl font-semibold">Decision history</h2>
+          {applicant.status_history?.length ? (
+            <ol className="space-y-3">
+              {applicant.status_history.map((entry) => (
+                <li key={entry.id} className="text-sm border-b border-border pb-3 last:border-0">
+                  <p className="font-medium">
+                    {entry.previous_status.replaceAll("_", " ")} → {entry.new_status.replaceAll("_", " ")}
+                  </p>
+                  <p>{entry.admin_name} ({entry.admin_email})</p>
+                  <time dateTime={entry.changed_at} className="text-muted-foreground">
+                    {new Intl.DateTimeFormat("en-CA", {
+                      dateStyle: "medium",
+                      timeStyle: "long",
+                      timeZone: "America/Toronto",
+                    }).format(new Date(entry.changed_at))}
+                  </time>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              No recorded decisions. Decisions made before tracking was enabled are unavailable.
+            </p>
+          )}
+        </section>
+
         <Accordion.Root
           type="multiple"
           defaultValue={accordionSections}
