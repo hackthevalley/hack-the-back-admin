@@ -1,14 +1,43 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import StatusChart from "@/components/StatusChart";
 import { useApplicants } from "@/context/useApplicants";
 
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { APPLICANT_STATUS_OPTIONS, ApplicantStatus } from "@/types/applicant";
+
+function formatStatus(status: string) {
+  return status
+    .toLowerCase()
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 function Home() {
+  const [statusFilter, setStatusFilter] = useState<ApplicantStatus | "all">(
+    ApplicantStatus.APPLIED,
+  );
   const {
     allApplicants: applicants,
     applicantsError,
     isLoadingApplicants,
     refreshAllApplicants,
   } = useApplicants();
+
+  const filteredApplicants = useMemo(
+    () =>
+      statusFilter === "all"
+        ? applicants
+        : applicants.filter((applicant) => applicant.status === statusFilter),
+    [applicants, statusFilter],
+  );
 
   useEffect(() => {
     void refreshAllApplicants().catch(() => undefined);
@@ -23,6 +52,45 @@ function Home() {
         <p className="mt-1 text-sm text-muted-foreground">
           Distribution across all {applicants.length.toLocaleString()}{" "}
           applications
+        </p>
+        <div className="mt-4 flex flex-col gap-2 sm:max-w-xs">
+          <Label htmlFor="stats-status">Status for demographic stats</Label>
+          <Select
+            value={statusFilter}
+            onValueChange={(value) => {
+              const status = APPLICANT_STATUS_OPTIONS.find(
+                (status) => status.valueOf() === value,
+              );
+              if (value === "all" || status) setStatusFilter(status ?? "all");
+            }}
+          >
+            <SelectTrigger
+              id="stats-status"
+              aria-describedby="stats-status-summary"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All statuses</SelectItem>
+              {APPLICANT_STATUS_OPTIONS.map((status) => (
+                <SelectItem key={status} value={status}>
+                  {formatStatus(status)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <p
+          id="stats-status-summary"
+          className="mt-2 text-sm text-muted-foreground"
+          aria-live="polite"
+        >
+          School, level of study, and gender:{" "}
+          {filteredApplicants.length.toLocaleString()} applicants
+          {statusFilter === "all"
+            ? " across all statuses"
+            : ` with status ${formatStatus(statusFilter)}`}
+          .
         </p>
       </header>
       {applicantsError ? (
@@ -53,20 +121,20 @@ function Home() {
             title="Applicants by School"
             field="school"
             maxCategories={8}
-            applicants={applicants}
+            applicants={filteredApplicants}
             isLoading={isLoadingApplicants}
           />
           <StatusChart
             title="Applicants by Level of Study"
             field="level_of_study"
             maxCategories={8}
-            applicants={applicants}
+            applicants={filteredApplicants}
             isLoading={isLoadingApplicants}
           />
           <StatusChart
             title="Applicants by Gender"
             field="gender"
-            applicants={applicants}
+            applicants={filteredApplicants}
             isLoading={isLoadingApplicants}
           />
         </div>

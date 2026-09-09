@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import { Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ApplicantStatus } from "@/components/applicants/types";
 import type { Applicant } from "@/types/applicant";
 
 const DISTINCT_COLORS = [
@@ -19,18 +18,6 @@ const DISTINCT_COLORS = [
   "#0D9488",
   "#7C3AED",
 ];
-
-const SUBMITTED_STATUSES = new Set<string>([
-  ApplicantStatus.APPLIED,
-  ApplicantStatus.UNDER_REVIEW,
-  ApplicantStatus.WAITLISTED,
-  ApplicantStatus.ACCEPTED,
-  ApplicantStatus.REJECTED,
-  ApplicantStatus.ACCEPTED_INVITE,
-  ApplicantStatus.REJECTED_INVITE,
-  ApplicantStatus.SCANNED_IN,
-  ApplicantStatus.WALK_IN_SUBMITTED,
-]);
 
 type ChartField = keyof Pick<
   Applicant,
@@ -173,9 +160,6 @@ function aggregateApplicants(
 ): ChartDatum[] {
   const counts = new Map<string, { name: string; value: number }>();
   for (const applicant of applicants) {
-    if (field !== "status" && !SUBMITTED_STATUSES.has(applicant.status)) {
-      continue;
-    }
     const label = normalizeLabel(applicant[field] ?? undefined, field);
     const key = label.toLocaleLowerCase();
     const existing = counts.get(key);
