@@ -1,6 +1,28 @@
 import fetchInstance from "@/lib/api";
 import type { ApplicantStatus } from "@/types/applicant";
 
+export interface RegistrationTimeRange {
+  id: string;
+  start_at: string;
+  end_at: string;
+}
+
+export function getRegistrationTimeRange(signal?: AbortSignal) {
+  return fetchInstance("forms/registration-timerange", {
+    signal,
+  }) as Promise<RegistrationTimeRange | null>;
+}
+
+export function updateRegistrationTimeRange(payload: {
+  start_at: string;
+  end_at: string;
+}) {
+  return fetchInstance("admin/forms/registration-timerange", {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  }) as Promise<RegistrationTimeRange>;
+}
+
 export function getApplication<T>(applicationId: string, signal?: AbortSignal) {
   return fetchInstance(`admin/account/applications/${applicationId}`, {
     signal,

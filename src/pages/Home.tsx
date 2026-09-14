@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import StatusChart from "@/components/StatusChart";
+import RegistrationTimeRange from "@/components/RegistrationTimeRange";
 import { useApplicants } from "@/context/useApplicants";
 
 import { Label } from "@/components/ui/label";
@@ -93,6 +94,7 @@ function Home() {
           .
         </p>
       </header>
+      <RegistrationTimeRange />
       {applicantsError ? (
         <div className="mb-6 flex items-center justify-between gap-4 rounded-md border border-destructive/40 bg-destructive/10 p-4">
           <p className="text-sm text-destructive">{applicantsError}</p>
