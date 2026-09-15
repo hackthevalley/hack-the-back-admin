@@ -1,6 +1,7 @@
 import { useContext, type ReactElement } from "react";
 import {
   House,
+  CalendarDays,
   Newspaper,
   LogOut,
   Menu,
@@ -32,6 +33,12 @@ type NavigationItem = {
 
 const NAVIGATION_ITEMS: NavigationItem[] = [
   { label: "Home", route: ROUTES.home, routeKey: "home", icon: House },
+  {
+    label: "Registration Dates",
+    route: ROUTES.registration,
+    routeKey: "registration",
+    icon: CalendarDays,
+  },
   {
     label: "Hacker Apps",
     route: ROUTES.apps,
