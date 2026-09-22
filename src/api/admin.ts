@@ -54,8 +54,11 @@ export function updateApplicationStatus(
   ) as Promise<{ application_id: string }>;
 }
 
-export function getJudgingPair<T>(signal?: AbortSignal) {
-  return fetchInstance("admin/judging/pair", { signal }) as Promise<T>;
+export function getJudgingPair<T>(levelOfStudy: string, signal?: AbortSignal) {
+  const query = new URLSearchParams();
+  if (levelOfStudy) query.set("level_of_study", levelOfStudy);
+  const suffix = query.size > 0 ? `?${query.toString()}` : "";
+  return fetchInstance(`admin/judging/pair${suffix}`, { signal }) as Promise<T>;
 }
 
 export function submitJudgingDecision(payload: {

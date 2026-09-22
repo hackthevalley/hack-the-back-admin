@@ -2,6 +2,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ApplicationCard } from "@/components/rank/ApplicationCard";
 import type { ApplicationDetail, Question } from "@/types/applicant";
 import {
@@ -21,6 +28,18 @@ type Score = {
 
 type Pair = { left: Score; right: Score };
 
+const STUDY_LEVEL_OPTIONS = [
+  { label: "All Years", value: "all" },
+  { label: "High School", value: "High School" },
+  { label: "1st Year", value: "Freshman - Undergraduate" },
+  { label: "2nd Year", value: "Sophomore - Undergraduate" },
+  { label: "3rd Year", value: "Junior - Undergraduate" },
+  { label: "4th Year", value: "Senior - Undergraduate" },
+  { label: "Graduate", value: "Graduate" },
+  { label: "PhD", value: "PhD" },
+  { label: "Other", value: "Other" },
+] as const;
+
 export default function Rank() {
   const [pair, setPair] = useState<Pair | null>(null);
   const [details, setDetails] = useState<ApplicationDetail[]>([]);
@@ -35,6 +54,7 @@ export default function Rank() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [levelOfStudy, setLevelOfStudy] = useState("all");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -83,7 +103,10 @@ export default function Rank() {
     setError(null);
     setResumeUrls([undefined, undefined]);
     try {
-      const nextPair = await getJudgingPair<Pair>(controller.signal);
+      const nextPair = await getJudgingPair<Pair>(
+        levelOfStudy === "all" ? "" : levelOfStudy,
+        controller.signal,
+      );
       const loadResume = async (applicationId: string, index: 0 | 1) => {
         try {
           const blob = await getApplicationResume(
@@ -142,7 +165,7 @@ export default function Rank() {
     } finally {
       if (!controller.signal.aborted) setLoading(false);
     }
-  }, []);
+  }, [levelOfStudy]);
 
   useEffect(() => {
     void loadPair();
@@ -205,19 +228,44 @@ export default function Rank() {
               shared globally; judge reliability is tracked per admin account.
             </p>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => void toggleExpanded()}
-            className="shrink-0 cursor-pointer gap-2"
-          >
-            {isExpanded ? (
-              <Minimize2 className="h-4 w-4" />
-            ) : (
-              <Maximize2 className="h-4 w-4" />
-            )}
-            {isExpanded ? "Exit fullscreen" : "Fullscreen"}
-          </Button>
+          <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+            <Select
+              value={levelOfStudy}
+              onValueChange={setLevelOfStudy}
+              disabled={submitting}
+            >
+              <SelectTrigger
+                className="w-full cursor-pointer sm:w-[170px]"
+                aria-label="Rank applicants by year"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STUDY_LEVEL_OPTIONS.map((option) => (
+                  <SelectItem
+                    key={option.value}
+                    value={option.value}
+                    className="cursor-pointer"
+                  >
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void toggleExpanded()}
+              className="shrink-0 cursor-pointer gap-2"
+            >
+              {isExpanded ? (
+                <Minimize2 className="h-4 w-4" />
+              ) : (
+                <Maximize2 className="h-4 w-4" />
+              )}
+              {isExpanded ? "Exit fullscreen" : "Fullscreen"}
+            </Button>
+          </div>
         </div>
 
         {loading ? (
