@@ -34,12 +34,6 @@ type NavigationItem = {
 const NAVIGATION_ITEMS: NavigationItem[] = [
   { label: "Home", route: ROUTES.home, routeKey: "home", icon: House },
   {
-    label: "Registration Dates",
-    route: ROUTES.registration,
-    routeKey: "registration",
-    icon: CalendarDays,
-  },
-  {
     label: "Hacker Apps",
     route: ROUTES.apps,
     routeKey: "apps",
@@ -53,6 +47,12 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
     icon: UtensilsCrossed,
   },
   { label: "Emails", route: ROUTES.emails, routeKey: "emails", icon: Mail },
+  {
+    label: "Registration Dates",
+    route: ROUTES.registration,
+    routeKey: "registration",
+    icon: CalendarDays,
+  },
 ];
 
 function CloseOnMobile({

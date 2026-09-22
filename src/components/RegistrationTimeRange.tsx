@@ -119,6 +119,7 @@ export default function RegistrationTimeRange() {
                   <Input
                     id="registration-start"
                     type="date"
+                    className="registration-date-input"
                     required
                     value={start}
                     disabled={saving}
@@ -133,6 +134,7 @@ export default function RegistrationTimeRange() {
                   <Input
                     id="registration-end"
                     type="date"
+                    className="registration-date-input"
                     required
                     value={end}
                     disabled={saving}

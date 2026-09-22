@@ -120,6 +120,10 @@
     }
   }
 }
+
+.registration-date-input {
+  color-scheme: dark;
+}
 @layer base {
   body {
     @apply bg-background text-foreground;
