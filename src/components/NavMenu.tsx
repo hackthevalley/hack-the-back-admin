@@ -54,9 +54,6 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
     routeKey: "registration",
     icon: CalendarDays,
   },
-];
-
-const BOTTOM_NAVIGATION_ITEMS: NavigationItem[] = [
   {
     label: "Resume Export",
     route: ROUTES.resumeExport,
@@ -75,16 +72,10 @@ function CloseOnMobile({
   return mobile ? <SheetClose asChild>{children}</SheetClose> : children;
 }
 
-function NavigationLinks({
-  mobile,
-  items = NAVIGATION_ITEMS,
-}: {
-  mobile: boolean;
-  items?: NavigationItem[];
-}) {
+function NavigationLinks({ mobile }: { mobile: boolean }) {
   const { pathname } = useLocation();
 
-  return items.map(({ label, route, routeKey, icon: Icon }) => {
+  return NAVIGATION_ITEMS.map(({ label, route, routeKey, icon: Icon }) => {
     const active = routeIsActive(routeKey, pathname);
     return (
       <CloseOnMobile key={route} mobile={mobile}>
@@ -151,10 +142,7 @@ function NavMenu() {
               <div className="flex flex-col gap-2">
                 <NavigationLinks mobile />
               </div>
-              <div className="flex flex-col gap-2">
-                <NavigationLinks mobile items={BOTTOM_NAVIGATION_ITEMS} />
-                <LogoutButton mobile />
-              </div>
+              <LogoutButton mobile />
             </nav>
           </SheetContent>
         </Sheet>
@@ -165,10 +153,7 @@ function NavMenu() {
           <h1 className="p-2 text-md font-semibold">Hack The Back</h1>
           <NavigationLinks mobile={false} />
         </div>
-        <div className="flex flex-col gap-2">
-          <NavigationLinks mobile={false} items={BOTTOM_NAVIGATION_ITEMS} />
-          <LogoutButton mobile={false} />
-        </div>
+        <LogoutButton mobile={false} />
       </nav>
     </>
   );
