@@ -8,6 +8,7 @@ import {
   UtensilsCrossed,
   Mail,
   Scale,
+  FileArchive,
   type LucideIcon,
 } from "lucide-react";
 import { Link, useLocation } from "react-router";
@@ -55,6 +56,15 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
   },
 ];
 
+const BOTTOM_NAVIGATION_ITEMS: NavigationItem[] = [
+  {
+    label: "Resume Export",
+    route: ROUTES.resumeExport,
+    routeKey: "resumeExport",
+    icon: FileArchive,
+  },
+];
+
 function CloseOnMobile({
   mobile,
   children,
@@ -65,10 +75,16 @@ function CloseOnMobile({
   return mobile ? <SheetClose asChild>{children}</SheetClose> : children;
 }
 
-function NavigationLinks({ mobile }: { mobile: boolean }) {
+function NavigationLinks({
+  mobile,
+  items = NAVIGATION_ITEMS,
+}: {
+  mobile: boolean;
+  items?: NavigationItem[];
+}) {
   const { pathname } = useLocation();
 
-  return NAVIGATION_ITEMS.map(({ label, route, routeKey, icon: Icon }) => {
+  return items.map(({ label, route, routeKey, icon: Icon }) => {
     const active = routeIsActive(routeKey, pathname);
     return (
       <CloseOnMobile key={route} mobile={mobile}>
@@ -135,7 +151,10 @@ function NavMenu() {
               <div className="flex flex-col gap-2">
                 <NavigationLinks mobile />
               </div>
-              <LogoutButton mobile />
+              <div className="flex flex-col gap-2">
+                <NavigationLinks mobile items={BOTTOM_NAVIGATION_ITEMS} />
+                <LogoutButton mobile />
+              </div>
             </nav>
           </SheetContent>
         </Sheet>
@@ -146,7 +165,10 @@ function NavMenu() {
           <h1 className="p-2 text-md font-semibold">Hack The Back</h1>
           <NavigationLinks mobile={false} />
         </div>
-        <LogoutButton mobile={false} />
+        <div className="flex flex-col gap-2">
+          <NavigationLinks mobile={false} items={BOTTOM_NAVIGATION_ITEMS} />
+          <LogoutButton mobile={false} />
+        </div>
       </nav>
     </>
   );

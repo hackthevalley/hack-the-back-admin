@@ -40,6 +40,25 @@ export function getApplicationResume(
   ) as Promise<Blob>;
 }
 
+export function exportResumes(filters: {
+  levelOfStudy?: string;
+  applicationStatus?: ApplicantStatus | "";
+}) {
+  const query = new URLSearchParams();
+  if (filters.levelOfStudy) {
+    query.set("level_of_study", filters.levelOfStudy);
+  }
+  if (filters.applicationStatus) {
+    query.set("role", filters.applicationStatus);
+  }
+  const suffix = query.size > 0 ? `?${query.toString()}` : "";
+  return fetchInstance(
+    `admin/account/resume-export${suffix}`,
+    { method: "GET" },
+    "blob",
+  ) as Promise<Blob>;
+}
+
 export function getQuestions<T>(signal?: AbortSignal) {
   return fetchInstance("forms/questions", { signal }) as Promise<T>;
 }

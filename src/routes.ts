@@ -7,6 +7,7 @@ export const ROUTES = {
   food: "/food",
   emails: "/emails",
   registration: "/registration",
+  resumeExport: "/resume-export",
 } as const;
 
 export type RouteKey = keyof typeof ROUTES;
@@ -20,6 +21,7 @@ export const ROUTE_MODULES = {
   food: () => import("./pages/Food.tsx"),
   emails: () => import("./pages/Emails.tsx"),
   registration: () => import("./pages/Registration.tsx"),
+  resumeExport: () => import("./pages/ResumeExport.tsx"),
 } satisfies Record<RouteKey, () => Promise<{ default: ComponentType }>>;
 
 export function routeIsActive(key: RouteKey, pathname: string): boolean {
