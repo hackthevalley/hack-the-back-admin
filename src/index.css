@@ -124,6 +124,16 @@
 .registration-date-input {
   color-scheme: dark;
 }
+
+.schedule-time-input {
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  .schedule-time-input {
+    color-scheme: dark;
+  }
+}
 @layer base {
   body {
     @apply bg-background text-foreground;

@@ -84,6 +84,7 @@ async function request(
     }
   }
   if (!response.ok) throw await responseError(response);
+  if (response.status === 204) return null;
   return responseType === "json" ? response.json() : response.blob();
 }
 

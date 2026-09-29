@@ -12,6 +12,7 @@ const Rank = lazy(ROUTE_MODULES.rank);
 const Food = lazy(ROUTE_MODULES.food);
 const Emails = lazy(ROUTE_MODULES.emails);
 const Registration = lazy(ROUTE_MODULES.registration);
+const Schedule = lazy(ROUTE_MODULES.schedule);
 const ResumeExport = lazy(ROUTE_MODULES.resumeExport);
 
 export default function App() {
@@ -33,6 +34,7 @@ export default function App() {
         <Route path={ROUTES.food} element={<Food />} />
         <Route path={ROUTES.emails} element={<Emails />} />
         <Route path={ROUTES.registration} element={<Registration />} />
+        <Route path={ROUTES.schedule} element={<Schedule />} />
         <Route path={ROUTES.resumeExport} element={<ResumeExport />} />
       </Route>
     </Routes>

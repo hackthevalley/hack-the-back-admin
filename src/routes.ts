@@ -7,6 +7,7 @@ export const ROUTES = {
   food: "/food",
   emails: "/emails",
   registration: "/registration",
+  schedule: "/schedule",
   resumeExport: "/resume-export",
 } as const;
 
@@ -21,6 +22,7 @@ export const ROUTE_MODULES = {
   food: () => import("./pages/Food.tsx"),
   emails: () => import("./pages/Emails.tsx"),
   registration: () => import("./pages/Registration.tsx"),
+  schedule: () => import("./pages/Schedule.tsx"),
   resumeExport: () => import("./pages/ResumeExport.tsx"),
 } satisfies Record<RouteKey, () => Promise<{ default: ComponentType }>>;
 

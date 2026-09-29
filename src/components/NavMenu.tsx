@@ -9,6 +9,7 @@ import {
   Mail,
   Scale,
   FileArchive,
+  Clock3,
   type LucideIcon,
 } from "lucide-react";
 import { Link, useLocation } from "react-router";
@@ -53,6 +54,12 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
     route: ROUTES.registration,
     routeKey: "registration",
     icon: CalendarDays,
+  },
+  {
+    label: "Schedule",
+    route: ROUTES.schedule,
+    routeKey: "schedule",
+    icon: Clock3,
   },
   {
     label: "Resume Export",

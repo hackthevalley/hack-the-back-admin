@@ -7,6 +7,55 @@ export interface RegistrationTimeRange {
   end_at: string;
 }
 
+export interface ScheduleEvent {
+  id: string;
+  title: string;
+  description: string | null;
+  location: string | null;
+  starts_at: string;
+  ends_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PublicSchedule {
+  event_start_at: string;
+  event_end_at: string;
+  events: ScheduleEvent[];
+}
+
+export type ScheduleEventInput = Pick<
+  ScheduleEvent,
+  "title" | "description" | "location" | "starts_at" | "ends_at"
+>;
+
+export function getSchedule(signal?: AbortSignal) {
+  return fetchInstance("schedule", { signal }) as Promise<PublicSchedule>;
+}
+
+export function createScheduleEvent(payload: ScheduleEventInput) {
+  return fetchInstance("admin/schedule", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  }) as Promise<ScheduleEvent>;
+}
+
+export function updateScheduleEvent(
+  eventId: string,
+  payload: ScheduleEventInput,
+) {
+  return fetchInstance(`admin/schedule/${eventId}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  }) as Promise<ScheduleEvent>;
+}
+
+export function deleteScheduleEvent(eventId: string) {
+  return fetchInstance(`admin/schedule/${eventId}`, {
+    method: "DELETE",
+  }) as Promise<null>;
+}
+
 export function getRegistrationTimeRange(signal?: AbortSignal) {
   return fetchInstance("forms/registration-timerange", {
     signal,
