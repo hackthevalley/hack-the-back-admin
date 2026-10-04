@@ -1,4 +1,5 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? "http://localhost:8000";
+const API_BASE_URL = `${BACKEND_URL.replace(/\/+$/, "")}/api`;
 
 interface FetchOptions {
   method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
