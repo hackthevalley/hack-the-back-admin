@@ -167,12 +167,21 @@ export default function ViewApplicant() {
           {applicant.status_history?.length ? (
             <ol className="space-y-3">
               {applicant.status_history.map((entry) => (
-                <li key={entry.id} className="text-sm border-b border-border pb-3 last:border-0">
+                <li
+                  key={entry.id}
+                  className="text-sm border-b border-border pb-3 last:border-0"
+                >
                   <p className="font-medium">
-                    {entry.previous_status.replaceAll("_", " ")} → {entry.new_status.replaceAll("_", " ")}
+                    {entry.previous_status.replaceAll("_", " ")} →{" "}
+                    {entry.new_status.replaceAll("_", " ")}
                   </p>
-                  <p>{entry.admin_name} ({entry.admin_email})</p>
-                  <time dateTime={entry.changed_at} className="text-muted-foreground">
+                  <p>
+                    {entry.admin_name} ({entry.admin_email})
+                  </p>
+                  <time
+                    dateTime={entry.changed_at}
+                    className="text-muted-foreground"
+                  >
                     {new Intl.DateTimeFormat("en-CA", {
                       dateStyle: "medium",
                       timeStyle: "long",
@@ -184,7 +193,8 @@ export default function ViewApplicant() {
             </ol>
           ) : (
             <p className="text-sm text-muted-foreground">
-              No recorded decisions. Decisions made before tracking was enabled are unavailable.
+              No recorded decisions. Decisions made before tracking was enabled
+              are unavailable.
             </p>
           )}
         </section>

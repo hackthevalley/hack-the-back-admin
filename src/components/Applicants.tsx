@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTable } from "@tanstack/react-table";
 import type {
   ColumnFiltersState,
@@ -37,30 +37,19 @@ export function Applicants({
   setFilters,
 }: ApplicantsProps) {
   const { updateApplicantStatus } = useApplicants();
-  const [data, setData] = useState<Applicant[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] =
     useState<ColumnVisibilityState>({});
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
-  useEffect(() => {
-    setData((applicants ?? []).map(formatApplicantDates));
-  }, [applicants]);
+  const data = useMemo(
+    () => (applicants ?? []).map(formatApplicantDates),
+    [applicants],
+  );
 
   const applyApplicationStatus = useCallback(
     (applicationId: string, status: ApplicantStatus) => {
-      setData((current) =>
-        current.map((applicant) =>
-          applicant.app_id === applicationId
-            ? {
-                ...applicant,
-                status,
-                updated_at: formatTorontoDate(new Date().toISOString()),
-              }
-            : applicant,
-        ),
-      );
       updateApplicantStatus(applicationId, status);
     },
     [updateApplicantStatus],

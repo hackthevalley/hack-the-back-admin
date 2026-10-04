@@ -30,63 +30,69 @@ export type ScheduleEventInput = Pick<
 >;
 
 export function getSchedule(signal?: AbortSignal) {
-  return fetchInstance("schedule", { signal }) as Promise<PublicSchedule>;
+  return fetchInstance<PublicSchedule>("schedule", { signal });
 }
 
 export function createScheduleEvent(payload: ScheduleEventInput) {
-  return fetchInstance("admin/schedule", {
+  return fetchInstance<ScheduleEvent>("admin/schedule", {
     method: "POST",
     body: JSON.stringify(payload),
-  }) as Promise<ScheduleEvent>;
+  });
 }
 
 export function updateScheduleEvent(
   eventId: string,
   payload: ScheduleEventInput,
 ) {
-  return fetchInstance(`admin/schedule/${eventId}`, {
+  return fetchInstance<ScheduleEvent>(`admin/schedule/${eventId}`, {
     method: "PUT",
     body: JSON.stringify(payload),
-  }) as Promise<ScheduleEvent>;
+  });
 }
 
 export function deleteScheduleEvent(eventId: string) {
-  return fetchInstance(`admin/schedule/${eventId}`, {
+  return fetchInstance<null>(`admin/schedule/${eventId}`, {
     method: "DELETE",
-  }) as Promise<null>;
+  });
 }
 
 export function getRegistrationTimeRange(signal?: AbortSignal) {
-  return fetchInstance("forms/registration-timerange", {
-    signal,
-  }) as Promise<RegistrationTimeRange | null>;
+  return fetchInstance<RegistrationTimeRange | null>(
+    "forms/registration-timerange",
+    {
+      signal,
+    },
+  );
 }
 
 export function updateRegistrationTimeRange(payload: {
   start_at: string;
   end_at: string;
 }) {
-  return fetchInstance("admin/forms/registration-timerange", {
-    method: "PUT",
-    body: JSON.stringify(payload),
-  }) as Promise<RegistrationTimeRange>;
+  return fetchInstance<RegistrationTimeRange>(
+    "admin/forms/registration-timerange",
+    {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    },
+  );
 }
 
 export function getApplication<T>(applicationId: string, signal?: AbortSignal) {
-  return fetchInstance(`admin/account/applications/${applicationId}`, {
+  return fetchInstance<T>(`admin/account/applications/${applicationId}`, {
     signal,
-  }) as Promise<T>;
+  });
 }
 
 export function getApplicationResume(
   applicationId: string,
   signal?: AbortSignal,
 ) {
-  return fetchInstance(
+  return fetchInstance<Blob>(
     `admin/account/applications/${applicationId}/resume`,
     { method: "GET", signal },
     "blob",
-  ) as Promise<Blob>;
+  );
 }
 
 export function exportResumes(filters: {
@@ -101,32 +107,32 @@ export function exportResumes(filters: {
     query.set("role", filters.applicationStatus);
   }
   const suffix = query.size > 0 ? `?${query.toString()}` : "";
-  return fetchInstance(
+  return fetchInstance<Blob>(
     `admin/account/resume-export${suffix}`,
     { method: "GET" },
     "blob",
-  ) as Promise<Blob>;
+  );
 }
 
 export function getQuestions<T>(signal?: AbortSignal) {
-  return fetchInstance("forms/questions", { signal }) as Promise<T>;
+  return fetchInstance<T>("forms/questions", { signal });
 }
 
 export function updateApplicationStatus(
   applicationId: string,
   status: ApplicantStatus,
 ) {
-  return fetchInstance(
+  return fetchInstance<{ application_id: string }>(
     `admin/account/applications/${applicationId}/status?request=${status}`,
     { method: "PATCH" },
-  ) as Promise<{ application_id: string }>;
+  );
 }
 
 export function getJudgingPair<T>(levelOfStudy: string, signal?: AbortSignal) {
   const query = new URLSearchParams();
   if (levelOfStudy) query.set("level_of_study", levelOfStudy);
   const suffix = query.size > 0 ? `?${query.toString()}` : "";
-  return fetchInstance(`admin/judging/pair${suffix}`, { signal }) as Promise<T>;
+  return fetchInstance<T>(`admin/judging/pair${suffix}`, { signal });
 }
 
 export function submitJudgingDecision(payload: {
@@ -142,7 +148,7 @@ export function submitJudgingDecision(payload: {
 }
 
 export function getMeals<T>() {
-  return fetchInstance("meals") as Promise<T>;
+  return fetchInstance<T>("meals");
 }
 
 export function updateMeal(mealId: string, isActive: boolean) {
@@ -153,8 +159,8 @@ export function updateMeal(mealId: string, isActive: boolean) {
 }
 
 export function sendBulkEmail<T>(payload: Record<string, unknown>) {
-  return fetchInstance("admin/account/bulk-emails", {
+  return fetchInstance<T>("admin/account/bulk-emails", {
     method: "POST",
     body: JSON.stringify(payload),
-  }) as Promise<T>;
+  });
 }

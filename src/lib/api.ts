@@ -39,24 +39,27 @@ async function refreshAccessToken(): Promise<string> {
 
 async function responseError(response: Response): Promise<ApiError> {
   let message = `Request failed with status ${String(response.status)}`;
-  try {
-    const data = (await response.json()) as {
-      message?: string;
-      detail?: string;
-    };
-    message = data.message ?? data.detail ?? JSON.stringify(data);
-  } catch {
-    message = (await response.text()) || message;
+  const body = await response.text();
+  if (body) {
+    try {
+      const data = JSON.parse(body) as {
+        message?: string;
+        detail?: string;
+      };
+      message = data.message ?? data.detail ?? body;
+    } catch {
+      message = body;
+    }
   }
   return new ApiError(message, response.status);
 }
 
-async function request(
+async function request<T>(
   endpoint: string,
   options: FetchOptions,
   responseType: "json" | "blob",
   retryOnUnauthorized: boolean,
-): Promise<unknown> {
+): Promise<T> {
   const token = localStorage.getItem("auth-token");
   const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
     ...options,
@@ -84,14 +87,16 @@ async function request(
     }
   }
   if (!response.ok) throw await responseError(response);
-  if (response.status === 204) return null;
-  return responseType === "json" ? response.json() : response.blob();
+  if (response.status === 204) return null as T;
+  return (
+    responseType === "json" ? response.json() : response.blob()
+  ) as Promise<T>;
 }
 
-export default function fetchInstance(
+export default function fetchInstance<T = unknown>(
   endpoint: string,
   options: FetchOptions = {},
   responseType: "json" | "blob" = "json",
-): Promise<unknown> {
-  return request(endpoint, options, responseType, true);
+): Promise<T> {
+  return request<T>(endpoint, options, responseType, true);
 }

@@ -6,15 +6,15 @@ export interface TokenResponse {
 }
 
 export function createSession(username: string, password: string) {
-  return fetchInstance("account/sessions", {
+  return fetchInstance<TokenResponse>("account/sessions", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({ username, password }).toString(),
-  }) as Promise<TokenResponse>;
+  });
 }
 
 export function refreshSession() {
-  return fetchInstance("account/tokens", {
+  return fetchInstance<TokenResponse>("account/tokens", {
     method: "POST",
-  }) as Promise<TokenResponse>;
+  });
 }

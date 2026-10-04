@@ -42,10 +42,10 @@ export function ApplicantsProvider({ children }: { children: ReactNode }) {
         queryParams.set("ranking_sort", params.rankingSort);
       }
 
-      const data = (await fetchInstance(
+      const data = await fetchInstance<ApplicantsApiResponse>(
         `admin/account/applications?${queryParams.toString()}`,
         { method: "GET" },
-      )) as ApplicantsApiResponse;
+      );
       return data.applications.map(normalizeApplicant);
     },
     [],
