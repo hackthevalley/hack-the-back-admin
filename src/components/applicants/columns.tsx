@@ -143,6 +143,13 @@ export function createApplicantColumns(
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => {
+                  onAction(ApplicantStatus.UNDER_REVIEW, applicant.app_id);
+                }}
+              >
+                Mark Under Review
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
                   onAction(ApplicantStatus.ACCEPTED, applicant.app_id);
                 }}
               >

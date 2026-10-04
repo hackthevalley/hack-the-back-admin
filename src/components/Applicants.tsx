@@ -128,6 +128,12 @@ export function Applicants({
       />
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 py-4">
         <BulkActionButton
+          label="Under Review Selected"
+          variant="default"
+          disabled={!selectedCount}
+          onClick={() => handleBulkAction(ApplicantStatus.UNDER_REVIEW)}
+        />
+        <BulkActionButton
           label="Accept Selected"
           variant="success"
           disabled={!selectedCount}
@@ -227,6 +233,8 @@ function showStatusToast(action: ApplicantStatus, count?: number) {
     toast.error(`${subject} rejected`, {
       icon: <XCircle className="text-red-500" />,
     });
+  } else if (action === ApplicantStatus.UNDER_REVIEW) {
+    toast(`${subject} marked under review`);
   } else {
     toast("Status updated");
   }
