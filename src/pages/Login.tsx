@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { useState, useContext, useEffect } from "react";
 import { createSession } from "@/api/auth";
 import { useNavigate } from "react-router";
-import { UserContext } from "@/context/auth";
+import { UserContext } from "@/context/auth-context";
 import { toast } from "sonner";
 
 function Login() {

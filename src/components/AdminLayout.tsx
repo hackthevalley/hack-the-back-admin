@@ -2,7 +2,7 @@ import { Suspense, useContext } from "react";
 import { Navigate, Outlet } from "react-router";
 
 import NavMenu from "@/components/NavMenu";
-import { UserContext } from "@/context/auth";
+import { UserContext } from "@/context/auth-context";
 import { ROUTES } from "@/routes";
 
 export function AdminLayout() {

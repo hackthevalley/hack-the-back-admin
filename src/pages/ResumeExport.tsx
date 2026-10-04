@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import {
   APPLICANT_STATUS_OPTIONS,
+  parseApplicantStatus,
   type ApplicantStatus,
 } from "@/types/applicant";
 
@@ -117,7 +118,11 @@ export default function ResumeExport() {
                 <Select
                   value={applicationStatus}
                   onValueChange={(value) => {
-                    setApplicationStatus(value as ApplicantStatus | typeof ALL);
+                    setApplicationStatus(
+                      value === ALL
+                        ? ALL
+                        : (parseApplicantStatus(value) ?? ALL),
+                    );
                   }}
                 >
                   <SelectTrigger id="resume-status">

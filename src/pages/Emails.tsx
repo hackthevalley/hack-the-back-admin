@@ -22,6 +22,7 @@ import { sendBulkEmail } from "@/api/admin";
 import { Mail, Send, CheckCircle, XCircle } from "lucide-react";
 import {
   APPLICANT_STATUS_OPTIONS,
+  parseApplicantStatus,
   type ApplicantStatus,
 } from "@/types/applicant";
 
@@ -222,7 +223,8 @@ function Emails() {
               <Select
                 value={selectedStatus}
                 onValueChange={(value) => {
-                  setSelectedStatus(value as ApplicantStatus);
+                  const status = parseApplicantStatus(value);
+                  if (status) setSelectedStatus(status);
                 }}
               >
                 <SelectTrigger id="status">

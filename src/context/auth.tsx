@@ -1,20 +1,12 @@
-import { useEffect, useCallback, useState, createContext } from "react";
+import { useEffect, useCallback, useState } from "react";
 import * as jose from "jose";
 import { refreshSession as requestSessionRefresh } from "@/api/auth";
 import { ApiError } from "@/lib/api";
-
-interface UserContextType {
-  login: (token: string) => void;
-  logout: () => void;
-  loading: boolean;
-  isAuthenticated: boolean;
-}
+import { UserContext } from "@/context/auth-context";
 
 interface AuthProviderProps {
   children: React.ReactNode;
 }
-
-const UserContext = createContext<UserContextType | null>(null);
 
 function assertAdminToken(token: string) {
   const { scopes } = jose.decodeJwt(token);
@@ -22,8 +14,6 @@ function assertAdminToken(token: string) {
     throw new Error("You do not have access");
   }
 }
-
-export { UserContext };
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [loading, setLoading] = useState(true);

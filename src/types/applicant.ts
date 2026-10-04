@@ -60,3 +60,12 @@ export interface ApplicationDetail {
 }
 
 export const APPLICANT_STATUS_OPTIONS = Object.values(ApplicantStatus);
+const APPLICANT_STATUS_BY_VALUE = new Map<string, ApplicantStatus>(
+  APPLICANT_STATUS_OPTIONS.map((status) => [status, status]),
+);
+
+export function parseApplicantStatus(
+  value: string,
+): ApplicantStatus | undefined {
+  return APPLICANT_STATUS_BY_VALUE.get(value);
+}

@@ -15,7 +15,7 @@ import {
 import { Link, useLocation } from "react-router";
 
 import { prefetchRoute, routeIsActive, ROUTES, type RouteKey } from "@/routes";
-import { UserContext } from "@/context/auth";
+import { UserContext } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
