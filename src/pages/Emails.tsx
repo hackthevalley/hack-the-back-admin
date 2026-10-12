@@ -35,8 +35,10 @@ interface EmailTemplate {
 interface BulkEmailResponse {
   message: string;
   total_recipients: number;
-  status: "queued" | "no_recipients";
+  status: "completed" | "partial_failure" | "no_recipients";
   job_id?: string;
+  successful?: number;
+  failed?: number;
 }
 
 const emailTemplates: EmailTemplate[] = [
@@ -125,10 +127,17 @@ function Emails() {
         context,
       });
 
-      toast.success(
-        `${response.message}\nTotal recipients: ${String(response.total_recipients)}`,
-        { duration: 5000 },
-      );
+      if (response.status === "partial_failure") {
+        toast.warning(
+          `Bulk email completed: ${String(response.successful ?? 0)} sent, ${String(response.failed ?? 0)} failed`,
+          { duration: 8000 },
+        );
+      } else {
+        toast.success(
+          `${response.message}\nTotal recipients: ${String(response.total_recipients)}`,
+          { duration: 5000 },
+        );
+      }
 
       // Reset form
       setSelectedTemplate("");
