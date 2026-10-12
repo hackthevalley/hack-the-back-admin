@@ -7,11 +7,16 @@ export interface RegistrationTimeRange {
   end_at: string;
 }
 
+export type ScheduleEventType =
+  "general" | "workshop" | "ceremony" | "food" | "activity";
+
 export interface ScheduleEvent {
   id: string;
   title: string;
   description: string | null;
   location: string | null;
+  event_type: ScheduleEventType;
+  is_important: boolean;
   starts_at: string;
   ends_at: string;
   created_at: string;
@@ -26,7 +31,13 @@ export interface PublicSchedule {
 
 export type ScheduleEventInput = Pick<
   ScheduleEvent,
-  "title" | "description" | "location" | "starts_at" | "ends_at"
+  | "title"
+  | "description"
+  | "location"
+  | "event_type"
+  | "is_important"
+  | "starts_at"
+  | "ends_at"
 >;
 
 export function getSchedule(signal?: AbortSignal) {

@@ -5,6 +5,7 @@ import {
   MapPin,
   Pencil,
   Plus,
+  Star,
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -17,17 +18,28 @@ import {
   type PublicSchedule,
   type ScheduleEvent,
   type ScheduleEventInput,
+  type ScheduleEventType,
 } from "@/api/admin";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
 type FormValues = {
   title: string;
   description: string;
   location: string;
+  eventType: ScheduleEventType;
+  isImportant: boolean;
   startDate: string;
   startTime: string;
   endDate: string;
@@ -38,11 +50,25 @@ const EMPTY_FORM: FormValues = {
   title: "",
   description: "",
   location: "",
+  eventType: "general",
+  isImportant: false,
   startDate: "",
   startTime: "",
   endDate: "",
   endTime: "",
 };
+
+const EVENT_TYPES: Array<{ value: ScheduleEventType; label: string }> = [
+  { value: "general", label: "General" },
+  { value: "workshop", label: "Workshop" },
+  { value: "ceremony", label: "Ceremony" },
+  { value: "food", label: "Food" },
+  { value: "activity", label: "Activity" },
+];
+
+const EVENT_TYPE_LABELS = Object.fromEntries(
+  EVENT_TYPES.map(({ value, label }) => [value, label]),
+) as Record<ScheduleEventType, string>;
 
 function backendDateTimeParts(iso: string): { date: string; time: string } {
   return { date: iso.slice(0, 10), time: iso.slice(11, 16) };
@@ -171,7 +197,10 @@ export default function Schedule() {
     };
   }, [schedule]);
 
-  function updateField(field: keyof FormValues, value: string) {
+  function updateField<Key extends keyof FormValues>(
+    field: Key,
+    value: FormValues[Key],
+  ) {
     setForm((current) => ({ ...current, [field]: value }));
   }
 
@@ -187,6 +216,8 @@ export default function Schedule() {
       title: event.title,
       description: event.description ?? "",
       location: event.location ?? "",
+      eventType: event.event_type,
+      isImportant: event.is_important,
       startDate: absoluteDateTimeParts(event.starts_at, offsetMinutes).date,
       startTime: absoluteDateTimeParts(event.starts_at, offsetMinutes).time,
       endDate: absoluteDateTimeParts(event.ends_at, offsetMinutes).date,
@@ -204,8 +235,8 @@ export default function Schedule() {
       offsetMinutes,
     );
     const end = eventLocalToDate(form.endDate, form.endTime, offsetMinutes);
-    if (start >= end) {
-      toast.error("The end time must be after the start time.");
+    if (start > end) {
+      toast.error("The end time cannot be before the start time.");
       return;
     }
 
@@ -213,6 +244,8 @@ export default function Schedule() {
       title: form.title.trim(),
       description: form.description.trim() || null,
       location: form.location.trim() || null,
+      event_type: form.eventType,
+      is_important: form.isImportant,
       starts_at: start.toISOString(),
       ends_at: end.toISOString(),
     };
@@ -314,6 +347,38 @@ export default function Schedule() {
                   }}
                   placeholder="Opening ceremony"
                 />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="event-type">Event type</Label>
+                  <Select
+                    value={form.eventType}
+                    onValueChange={(value) => {
+                      updateField("eventType", value as ScheduleEventType);
+                    }}
+                  >
+                    <SelectTrigger id="event-type">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {EVENT_TYPES.map(({ value, label }) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-3 self-end rounded-lg border p-3">
+                  <Checkbox
+                    id="event-important"
+                    checked={form.isImportant}
+                    onCheckedChange={(checked) => {
+                      updateField("isImportant", checked === true);
+                    }}
+                  />
+                  <Label htmlFor="event-important">Important event</Label>
+                </div>
               </div>
               <fieldset className="grid gap-4 rounded-lg border bg-muted/20 p-4">
                 <legend className="px-1 text-sm font-medium">When</legend>
@@ -417,7 +482,7 @@ export default function Schedule() {
                   <span className="mr-1 text-xs font-medium text-muted-foreground">
                     Quick duration
                   </span>
-                  {[30, 60, 90, 120].map((minutes) => (
+                  {[0, 30, 60, 90, 120].map((minutes) => (
                     <Button
                       key={minutes}
                       type="button"
@@ -427,9 +492,11 @@ export default function Schedule() {
                         setDuration(minutes);
                       }}
                     >
-                      {minutes < 60
-                        ? `${String(minutes)} min`
-                        : `${String(minutes / 60)} hr`}
+                      {minutes === 0
+                        ? "Deadline"
+                        : minutes < 60
+                          ? `${String(minutes)} min`
+                          : `${String(minutes / 60)} hr`}
                     </Button>
                   ))}
                 </div>
@@ -498,17 +565,37 @@ export default function Schedule() {
                 <Card key={event.id}>
                   <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
-                      <h3 className="font-semibold">{event.title}</h3>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="font-semibold">{event.title}</h3>
+                        <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-medium">
+                          {EVENT_TYPE_LABELS[event.event_type]}
+                        </span>
+                        {event.is_important && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">
+                            <Star className="h-3 w-3" /> Important
+                          </span>
+                        )}
+                        {event.starts_at === event.ends_at && (
+                          <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-900">
+                            Deadline
+                          </span>
+                        )}
+                      </div>
                       <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
                         <Clock3 className="h-4 w-4 shrink-0" />
                         {formatEventTime(
                           event.starts_at,
                           bounds?.offsetMinutes ?? 0,
-                        )}{" "}
-                        –{" "}
-                        {formatEventTime(
-                          event.ends_at,
-                          bounds?.offsetMinutes ?? 0,
+                        )}
+                        {event.starts_at !== event.ends_at && (
+                          <>
+                            {" "}
+                            –{" "}
+                            {formatEventTime(
+                              event.ends_at,
+                              bounds?.offsetMinutes ?? 0,
+                            )}
+                          </>
                         )}
                       </p>
                       {event.location && (
