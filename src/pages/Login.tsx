@@ -46,9 +46,12 @@ function Login() {
   };
 
   return (
-    <div className="flex justify-center items-center h-screen">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-1/4">
-        <h1 className="font-semibold text-lg">
+    <main className="flex min-h-dvh items-center justify-center px-4 py-8 sm:px-6">
+      <form
+        onSubmit={handleSubmit}
+        className="flex w-full max-w-sm flex-col gap-4"
+      >
+        <h1 className="text-xl font-semibold leading-tight">
           Sign in to view admin dashboard
         </h1>
         <Label htmlFor="username">Email address</Label>
@@ -72,11 +75,11 @@ function Login() {
           required
           onChange={handleChange}
         />
-        <Button type="submit" variant="secondary" className="w-min">
+        <Button type="submit" variant="secondary" className="w-full sm:w-fit">
           Sign In
         </Button>
       </form>
-    </div>
+    </main>
   );
 }
 
