@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useState, type SyntheticEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type SyntheticEvent,
+} from "react";
 import {
   CalendarClock,
   Clock3,
@@ -150,6 +156,7 @@ function errorMessage(error: unknown): string {
 }
 
 export default function Schedule() {
+  const mainRef = useRef<HTMLElement>(null);
   const [schedule, setSchedule] = useState<PublicSchedule | null>(null);
   const [form, setForm] = useState<FormValues>(EMPTY_FORM);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -223,7 +230,7 @@ export default function Schedule() {
       endDate: absoluteDateTimeParts(event.ends_at, offsetMinutes).date,
       endTime: absoluteDateTimeParts(event.ends_at, offsetMinutes).time,
     });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   async function submit(event: SyntheticEvent<HTMLFormElement>) {
@@ -304,7 +311,10 @@ export default function Schedule() {
   }
 
   return (
-    <main className="min-w-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">
+    <main
+      ref={mainRef}
+      className="min-w-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8"
+    >
       <div className="mx-auto max-w-5xl">
         <header className="mb-6">
           <h1 className="text-2xl font-semibold tracking-tight">Schedule</h1>
